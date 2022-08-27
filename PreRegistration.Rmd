@@ -1,0 +1,507 @@
+---
+title             : "The title"
+shorttitle        : "Title"
+
+author: 
+  - name          : "First Author"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Postal address"
+    email         : "my@email.com"
+    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
+      - "Conceptualization"
+      - "Writing - Original Draft Preparation"
+      - "Writing - Review & Editing"
+  - name          : "Ernst-August Doelle"
+    affiliation   : "1,2"
+    role:
+      - "Writing - Review & Editing"
+      - "Supervision"
+
+affiliation:
+  - id            : "1"
+    institution   : "Wilhelm-Wundt-University"
+  - id            : "2"
+    institution   : "Konstanz Business School"
+
+authornote: |
+  Add complete departmental affiliations for each author here. Each new line herein must be indented, like this line.
+
+  Enter author note here.
+
+abstract: |
+  One or two sentences providing a **basic introduction** to the field,  comprehensible to a scientist in any discipline.
+  
+  Two to three sentences of **more detailed background**, comprehensible  to scientists in related disciplines.
+  
+  One sentence clearly stating the **general problem** being addressed by  this particular study.
+  
+  One sentence summarizing the main result (with the words "**here we show**" or their equivalent).
+  
+  Two or three sentences explaining what the **main result** reveals in direct comparison to what was thought to be the case previously, or how the  main result adds to previous knowledge.
+  
+  One or two sentences to put the results into a more **general context**.
+  
+  Two or three sentences to provide a **broader perspective**, readily comprehensible to a scientist in any discipline.
+  
+  <!-- https://tinyurl.com/ybremelq -->
+  
+keywords          : "keywords"
+wordcount         : "X"
+
+bibliography      : c("r-references.bib","r-libs.bib")
+
+floatsintext      : no
+linenumbers       : yes
+draft             : no
+mask              : no
+
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+
+classoption       : "man"
+output            : papaja::apa6_pdf
+---
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F, dpi=300)
+options(knitr.duplicate.label = "allow")
+set.seed(123)
+par(family = "Arial")
+
+```
+
+```{r pacman,  include=FALSE}
+#You need to run this chunk 1X in your system 
+#install.packages("pacman")#Run this if you don't have pacman installed.
+# renv::restore()
+pacman::p_load(MOTE, tidyverse, psych, lavaan,kableExtra,gt,gtsummary, mirt,likert,kutils,semPlot,semTable,semTools,dlookr,VIM,ggplot2,cowplot,questionr,magick, readxl)
+library(readxl)
+library(gtExtras)
+library(papaja)
+library(tabledown)
+papaja::r_refs("r-libs.bib")
+# renv::snapshot()
+#if you dont have LaTeX installed run the following lines
+#install.packages("tinytex")
+#tinytex::install_tinytex()
+```
+
+
+
+# Methods
+
+
+## Participants
+
+```{r data, include =F}
+stem_data <- readRDS("Demodata/demodata.rds")
+```
+
+```{r recode, include =F}
+recod_depression <- c(
+  "একেবারেই প্রযোজ্য নয়" = "1",
+  "প্রযোজ্য নয়" = "2",
+  "মাঝামাঝি" = "3",
+  "কিছুটা প্রযোজ্য" = "4",
+  "পুরোপুরি প্রযোজ্য" = "5"
+)
+
+recod_gasp <- c("একদম সম্ভাবনা নেই (0%)"= "1",
+                   "প্রায় সম্ভাবনা নেই (25%)" = "2",
+                   "অনিশ্চিত (50%)"= "3",
+                   "প্রায় সম্ভাবনা আছে (75%)" = "4",
+                   "পূর্ণ সম্ভাবনা আছে(100%)" = "5")
+
+recod_bigfive <- c("একেবারেই সমর্থন করিনা"= "1",
+                   "সমর্থন করি না" = "2",
+                   "অনিশ্চিত"= "3",
+                   "সমর্থন করি" = "4",
+                   "খুব বেশি  সমর্থন করি" = "5")
+
+
+recod_epqr <- c("হ্যাঁ"= "1",
+                   "না" = "2")
+ 
+
+
+recode_data_bf <-  mutate(stem_data , across(starts_with("BF"), ~unname(recod_bigfive [.])))
+
+recode_data_bf_dep <-  mutate(recode_data_bf, across(starts_with("D"), ~unname(recod_depression[.])))
+
+recode_data_bf_dep_gasp <-  mutate(recode_data_bf_dep, across(starts_with("GASP"), ~unname(recod_gasp [.])))
+recode_data_bf_dep_gasp_rpqr <-  mutate(recode_data_bf_dep_gasp, across(starts_with("EPQR"), ~unname(recod_epqr [.])))
+
+
+data_base <- recode_data_bf_dep_gasp_rpqr[, c(2:6)]
+data_scores <- recode_data_bf_dep_gasp_rpqr[, c(7:161)]
+data_scores_numeric <- as.data.frame(lapply(data_scores, as.numeric))
+data <- cbind(data_base,data_scores_numeric)
+```
+
+```{r data-wrangling}
+data <- data %>% 
+  dplyr::rowwise() %>% 
+ dplyr::mutate(total_dep= sum(across(starts_with("D")), na.rm = T),
+         guilt_nbe= sum(GASP01,GASP09,GASP14,GASP16),
+         guilt_repair = sum(GASP02,GASP05,GASP11,GASP15),
+         guilt_nse = sum(GASP03,GASP06,GASP10,GASP13),
+         guilt_withdraw = sum(GASP04,GASP07,GASP08,GASP12))
+
+
+
+depression_score_check <- which(!between(data$total_dep, 30, 150)) 
+guilt_nbe_score_check <- which(!between(data$guilt_nbe, 4, 20)) 
+guilt_repair_score_check <- which(!between(data$guilt_repair, 4, 20)) 
+guilt_nse_score_check <- which(!between(data$guilt_nse, 4, 20)) 
+guilt_withdraw_score_check <- which(!between(data$guilt_withdraw, 4, 20)) 
+
+bigfive <- data %>% 
+  dplyr::select(Age:BF60)
+
+```
+
+```{r bigfive-reverse-code}
+## Reverse coding of BigFive 2
+## Recoding bigfive$BF11 into bigfive$RBF11
+bigfive$RBF11 <- as.character(bigfive$BF11)
+bigfive$RBF11[bigfive$BF11 == "1"] <- "5"
+bigfive$RBF11[bigfive$BF11 == "2"] <- "4"
+bigfive$RBF11[bigfive$BF11 == "3"] <- "3"
+bigfive$RBF11[bigfive$BF11 == "4"] <- "2"
+bigfive$RBF11[bigfive$BF11 == "5"] <- "1"
+bigfive$RBF11 <- as.numeric(bigfive$RBF11)
+
+## Recoding bigfive$BF16 into bigfive$RBF16
+bigfive$RBF16 <- as.character(bigfive$BF16)
+bigfive$RBF16[bigfive$BF16 == "1"] <- "5"
+bigfive$RBF16[bigfive$BF16 == "2"] <- "4"
+bigfive$RBF16[bigfive$BF16 == "3"] <- "3"
+bigfive$RBF16[bigfive$BF16 == "4"] <- "2"
+bigfive$RBF16[bigfive$BF16 == "5"] <- "1"
+bigfive$RBF16 <- as.numeric(bigfive$RBF16)
+
+## Recoding bigfive$BF26 into bigfive$RBF26
+bigfive$RBF26 <- as.character(bigfive$BF26)
+bigfive$RBF26[bigfive$BF26 == "1"] <- "5"
+bigfive$RBF26[bigfive$BF26 == "2"] <- "4"
+bigfive$RBF26[bigfive$BF26 == "3"] <- "3"
+bigfive$RBF26[bigfive$BF26 == "4"] <- "2"
+bigfive$RBF26[bigfive$BF26 == "5"] <- "1"
+bigfive$RBF26 <- as.numeric(bigfive$RBF26)
+
+## Recoding bigfive$BF31 into bigfive$RBF31
+bigfive$RBF31 <- as.character(bigfive$BF31)
+bigfive$RBF31[bigfive$BF31 == "1"] <- "5"
+bigfive$RBF31[bigfive$BF31 == "2"] <- "4"
+bigfive$RBF31[bigfive$BF31 == "3"] <- "3"
+bigfive$RBF31[bigfive$BF31 == "4"] <- "2"
+bigfive$RBF31[bigfive$BF31 == "5"] <- "1"
+bigfive$RBF31 <- as.numeric(bigfive$RBF31)
+
+## Recoding bigfive$BF36 into bigfive$RBF36
+bigfive$RBF36 <- as.character(bigfive$BF36)
+bigfive$RBF36[bigfive$BF36 == "1"] <- "5"
+bigfive$RBF36[bigfive$BF36 == "2"] <- "4"
+bigfive$RBF36[bigfive$BF36 == "3"] <- "3"
+bigfive$RBF36[bigfive$BF36 == "4"] <- "2"
+bigfive$RBF36[bigfive$BF36 == "5"] <- "1"
+bigfive$RBF36 <- as.numeric(bigfive$RBF36)
+
+## Recoding bigfive$BF51 into bigfive$BF51_rec
+bigfive$RBF51 <- as.character(bigfive$BF51)
+bigfive$RBF51[bigfive$BF51 == "1"] <- "5"
+bigfive$RBF51[bigfive$BF51 == "2"] <- "4"
+bigfive$RBF51[bigfive$BF51 == "3"] <- "3"
+bigfive$RBF51[bigfive$BF51 == "4"] <- "2"
+bigfive$RBF51[bigfive$BF51 == "5"] <- "1"
+bigfive$RBF51 <- as.numeric(bigfive$RBF51)
+
+## Recoding bigfive$BF12 into bigfive$RBF12
+bigfive$RBF12 <- as.character(bigfive$BF12)
+bigfive$RBF12[bigfive$BF12 == "1"] <- "5"
+bigfive$RBF12[bigfive$BF12 == "2"] <- "4"
+bigfive$RBF12[bigfive$BF12 == "3"] <- "3"
+bigfive$RBF12[bigfive$BF12 == "4"] <- "2"
+bigfive$RBF12[bigfive$BF12 == "5"] <- "1"
+bigfive$RBF12 <- as.numeric(bigfive$RBF12)
+
+## Recoding bigfive$BF17 into bigfive$RBF17
+bigfive$RBF17 <- as.character(bigfive$BF17)
+bigfive$RBF17[bigfive$BF17 == "1"] <- "5"
+bigfive$RBF17[bigfive$BF17 == "2"] <- "4"
+bigfive$RBF17[bigfive$BF17 == "3"] <- "3"
+bigfive$RBF17[bigfive$BF17 == "4"] <- "2"
+bigfive$RBF17[bigfive$BF17 == "5"] <- "1"
+bigfive$RBF17 <- as.numeric(bigfive$RBF17)
+
+## Recoding bigfive$BF22 into bigfive$RBF22
+bigfive$RBF22 <- as.character(bigfive$BF22)
+bigfive$RBF22[bigfive$BF22 == "1"] <- "5"
+bigfive$RBF22[bigfive$BF22 == "2"] <- "4"
+bigfive$RBF22[bigfive$BF22 == "3"] <- "3"
+bigfive$RBF22[bigfive$BF22 == "4"] <- "2"
+bigfive$RBF22[bigfive$BF22 == "5"] <- "1"
+bigfive$RBF22 <- as.numeric(bigfive$RBF22)
+
+## Recoding bigfive$BF37 into bigfive$RBF37
+bigfive$RBF37 <- as.character(bigfive$BF37)
+bigfive$RBF37[bigfive$BF37 == "1"] <- "5"
+bigfive$RBF37[bigfive$BF37 == "2"] <- "4"
+bigfive$RBF37[bigfive$BF37 == "3"] <- "3"
+bigfive$RBF37[bigfive$BF37 == "4"] <- "2"
+bigfive$RBF37[bigfive$BF37 == "5"] <- "1"
+bigfive$RBF37 <- as.numeric(bigfive$RBF37)
+
+## Recoding bigfive$BF42 into bigfive$RBF42
+bigfive$RBF42 <- as.character(bigfive$BF42)
+bigfive$RBF42[bigfive$BF42 == "1"] <- "5"
+bigfive$RBF42[bigfive$BF42 == "2"] <- "4"
+bigfive$RBF42[bigfive$BF42 == "3"] <- "3"
+bigfive$RBF42[bigfive$BF42 == "4"] <- "2"
+bigfive$RBF42[bigfive$BF42 == "5"] <- "1"
+bigfive$RBF42 <- as.numeric(bigfive$RBF42)
+
+#### Recoding bigfive$BF47 into bigfive$RBF47
+bigfive$RBF47 <- as.character(bigfive$BF47)
+bigfive$RBF47[bigfive$BF47 == "1"] <- "5"
+bigfive$RBF47[bigfive$BF47 == "2"] <- "4"
+bigfive$RBF47[bigfive$BF47 == "3"] <- "3"
+bigfive$RBF47[bigfive$BF47 == "4"] <- "2"
+bigfive$RBF47[bigfive$BF47 == "5"] <- "1"
+bigfive$RBF47 <- as.numeric(bigfive$RBF47)
+
+## Recoding bigfive$BF3 into bigfive$RBF3
+bigfive$RBF03 <- as.character(bigfive$BF03)
+bigfive$RBF03[bigfive$BF03 == "1"] <- "5"
+bigfive$RBF03[bigfive$BF03 == "2"] <- "4"
+bigfive$RBF03[bigfive$BF03 == "3"] <- "3"
+bigfive$RBF03[bigfive$BF03 == "4"] <- "2"
+bigfive$RBF03[bigfive$BF03 == "5"] <- "1"
+bigfive$RBF03 <- as.numeric(bigfive$RBF03)
+
+
+## Recoding bigfive$BF8 into bigfive$RBF8
+bigfive$RBF08 <- as.character(bigfive$BF08)
+bigfive$RBF08[bigfive$BF08 == "1"] <- "5"
+bigfive$RBF08[bigfive$BF08 == "2"] <- "4"
+bigfive$RBF08[bigfive$BF08 == "3"] <- "3"
+bigfive$RBF08[bigfive$BF08 == "4"] <- "2"
+bigfive$RBF08[bigfive$BF08 == "5"] <- "1"
+bigfive$RBF08 <- as.numeric(bigfive$RBF08)
+
+## Recoding bigfive$BF23 into bigfive$RBF23
+bigfive$RBF23 <- as.character(bigfive$BF23)
+bigfive$RBF23[bigfive$BF23 == "1"] <- "5"
+bigfive$RBF23[bigfive$BF23 == "2"] <- "4"
+bigfive$RBF23[bigfive$BF23 == "3"] <- "3"
+bigfive$RBF23[bigfive$BF23 == "4"] <- "2"
+bigfive$RBF23[bigfive$BF23 == "5"] <- "1"
+bigfive$RBF23 <- as.numeric(bigfive$RBF23)
+
+## Recoding bigfive$BF28 into bigfive$RBF28
+bigfive$RBF28 <- as.character(bigfive$BF28)
+bigfive$RBF28[bigfive$BF28 == "1"] <- "5"
+bigfive$RBF28[bigfive$BF28 == "2"] <- "4"
+bigfive$RBF28[bigfive$BF28 == "3"] <- "3"
+bigfive$RBF28[bigfive$BF28 == "4"] <- "2"
+bigfive$RBF28[bigfive$BF28 == "5"] <- "1"
+bigfive$RBF28 <- as.numeric(bigfive$RBF28)
+
+## Recoding bigfive$BF48 into bigfive$RBF48
+bigfive$RBF48 <- as.character(bigfive$BF48)
+bigfive$RBF48[bigfive$BF48 == "1"] <- "5"
+bigfive$RBF48[bigfive$BF48 == "2"] <- "4"
+bigfive$RBF48[bigfive$BF48 == "3"] <- "3"
+bigfive$RBF48[bigfive$BF48 == "4"] <- "2"
+bigfive$RBF48[bigfive$BF48 == "5"] <- "1"
+bigfive$RBF48 <- as.numeric(bigfive$RBF48)
+
+
+## Recoding bigfive$BF58 into bigfive$RBF58
+bigfive$RBF58 <- as.character(bigfive$BF58)
+bigfive$RBF58[bigfive$BF58 == "1"] <- "5"
+bigfive$RBF58[bigfive$BF58 == "2"] <- "4"
+bigfive$RBF58[bigfive$BF58 == "3"] <- "3"
+bigfive$RBF58[bigfive$BF58 == "4"] <- "2"
+bigfive$RBF58[bigfive$BF58 == "5"] <- "1"
+bigfive$RBF58 <- as.numeric(bigfive$RBF58)
+
+## Recoding bigfive$BF4 into bigfive$RBF4
+bigfive$RBF04 <- as.character(bigfive$BF04)
+bigfive$RBF04[bigfive$BF04 == "1"] <- "5"
+bigfive$RBF04[bigfive$BF04 == "2"] <- "4"
+bigfive$RBF04[bigfive$BF04 == "3"] <- "3"
+bigfive$RBF04[bigfive$BF04 == "4"] <- "2"
+bigfive$RBF04[bigfive$BF04 == "5"] <- "1"
+bigfive$RBF04 <- as.numeric(bigfive$RBF04)
+
+## Recoding bigfive$BF9 into bigfive$RBF9
+bigfive$RBF09 <- as.character(bigfive$BF09)
+bigfive$RBF09[bigfive$BF09 == "1"] <- "5"
+bigfive$RBF09[bigfive$BF09 == "2"] <- "4"
+bigfive$RBF09[bigfive$BF09 == "3"] <- "3"
+bigfive$RBF09[bigfive$BF09 == "4"] <- "2"
+bigfive$RBF09[bigfive$BF09 == "5"] <- "1"
+bigfive$RBF09 <- as.numeric(bigfive$RBF09)
+
+## Recoding bigfive$BF24 into bigfive$RBF24
+bigfive$RBF24 <- as.character(bigfive$BF24)
+bigfive$RBF24[bigfive$BF24 == "1"] <- "5"
+bigfive$RBF24[bigfive$BF24 == "2"] <- "4"
+bigfive$RBF24[bigfive$BF24 == "3"] <- "3"
+bigfive$RBF24[bigfive$BF24 == "4"] <- "2"
+bigfive$RBF24[bigfive$BF24 == "5"] <- "1"
+bigfive$RBF24 <- as.numeric(bigfive$RBF24)
+
+## Recoding bigfive$BF29 into bigfive$RBF29
+bigfive$RBF29 <- as.character(bigfive$BF29)
+bigfive$RBF29[bigfive$BF29 == "1"] <- "5"
+bigfive$RBF29[bigfive$BF29 == "2"] <- "4"
+bigfive$RBF29[bigfive$BF29 == "3"] <- "3"
+bigfive$RBF29[bigfive$BF29 == "4"] <- "2"
+bigfive$RBF29[bigfive$BF29 == "5"] <- "1"
+bigfive$RBF29 <- as.numeric(bigfive$RBF29)
+
+## Recoding bigfive$BF44 into bigfive$RBF44
+bigfive$RBF44 <- as.character(bigfive$BF44)
+bigfive$RBF44[bigfive$BF44 == "1"] <- "5"
+bigfive$RBF44[bigfive$BF44 == "2"] <- "4"
+bigfive$RBF44[bigfive$BF44 == "3"] <- "3"
+bigfive$RBF44[bigfive$BF44 == "4"] <- "2"
+bigfive$RBF44[bigfive$BF44 == "5"] <- "1"
+bigfive$RBF44 <- as.numeric(bigfive$RBF44)
+
+## Recoding bigfive$BF49 into bigfive$RBF49
+bigfive$RBF49 <- as.character(bigfive$BF49)
+bigfive$RBF49[bigfive$BF49 == "1"] <- "5"
+bigfive$RBF49[bigfive$BF49 == "2"] <- "4"
+bigfive$RBF49[bigfive$BF49 == "3"] <- "3"
+bigfive$RBF49[bigfive$BF49 == "4"] <- "2"
+bigfive$RBF49[bigfive$BF49 == "5"] <- "1"
+bigfive$RBF49 <- as.numeric(bigfive$RBF49)
+
+## Recoding bigfive$BF5 into bigfive$RBF5
+bigfive$RBF05 <- as.character(bigfive$BF05)
+bigfive$RBF05[bigfive$BF05 == "1"] <- "5"
+bigfive$RBF05[bigfive$BF05 == "2"] <- "4"
+bigfive$RBF05[bigfive$BF05 == "3"] <- "3"
+bigfive$RBF05[bigfive$BF05 == "4"] <- "2"
+bigfive$RBF05[bigfive$BF05 == "5"] <- "1"
+bigfive$RBF05 <- as.numeric(bigfive$RBF05)
+
+
+
+## Recoding bigfive$BF25 into bigfive$RBF25
+bigfive$RBF25 <- as.character(bigfive$BF25)
+bigfive$RBF25[bigfive$BF25 == "1"] <- "5"
+bigfive$RBF25[bigfive$BF25 == "2"] <- "4"
+bigfive$RBF25[bigfive$BF25 == "3"] <- "3"
+bigfive$RBF25[bigfive$BF25 == "4"] <- "2"
+bigfive$RBF25[bigfive$BF25 == "5"] <- "1"
+bigfive$RBF25 <- as.numeric(bigfive$RBF25)
+
+## Recoding bigfive$BF30 into bigfive$RBF30
+bigfive$RBF30 <- as.character(bigfive$BF30)
+bigfive$RBF30[bigfive$BF30 == "1"] <- "5"
+bigfive$RBF30[bigfive$BF30 == "2"] <- "4"
+bigfive$RBF30[bigfive$BF30 == "3"] <- "3"
+bigfive$RBF30[bigfive$BF30 == "4"] <- "2"
+bigfive$RBF30[bigfive$BF30 == "5"] <- "1"
+bigfive$RBF30 <- as.numeric(bigfive$RBF30)
+
+## Recoding bigfive$BF45 into bigfive$RBF45
+bigfive$RBF45 <- as.character(bigfive$BF45)
+bigfive$RBF45[bigfive$BF45 == "1"] <- "5"
+bigfive$RBF45[bigfive$BF45 == "2"] <- "4"
+bigfive$RBF45[bigfive$BF45 == "3"] <- "3"
+bigfive$RBF45[bigfive$BF45 == "4"] <- "2"
+bigfive$RBF45[bigfive$BF45 == "5"] <- "1"
+bigfive$RBF45 <- as.numeric(bigfive$RBF45)
+
+
+## Recoding bigfive$BF50 into bigfive$RBF50
+bigfive$RBF50 <- as.character(bigfive$BF50)
+bigfive$RBF50[bigfive$BF50 == "1"] <- "5"
+bigfive$RBF50[bigfive$BF50 == "2"] <- "4"
+bigfive$RBF50[bigfive$BF50 == "3"] <- "3"
+bigfive$RBF50[bigfive$BF50 == "4"] <- "2"
+bigfive$RBF50[bigfive$BF50 == "5"] <- "1"
+bigfive$RBF50 <- as.numeric(bigfive$RBF50)
+
+
+## Recoding bigfive$BF55 into bigfive$RBF55
+bigfive$RBF55 <- as.character(bigfive$BF55)
+bigfive$RBF55[bigfive$BF55 == "1"] <- "5"
+bigfive$RBF55[bigfive$BF55 == "2"] <- "4"
+bigfive$RBF55[bigfive$BF55 == "3"] <- "3"
+bigfive$RBF55[bigfive$BF55 == "4"] <- "2"
+bigfive$RBF55[bigfive$BF55 == "5"] <- "1"
+bigfive$RBF55 <- as.numeric(bigfive$RBF55)
+```
+
+
+## Material
+
+## Procedure
+
+## Data analysis
+We used `r cite_r("r-libs.bib")` for all our analyses.
+
+
+# Results
+```{r CFA}
+#Single Domain Model
+##Extraversion
+extra.singledomain.model <- ' extra=~ BF01 + BF06 + RBF11 + RBF16 + BF21 + RBF26 + RBF36 + BF41 +BF46 + RBF51 + BF56'
+extra.singledomain.model.fit <-cfa(extra.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
+
+extra.singledomain.model.sum <- lavaan::summary(extra.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+
+##Agreeableness
+agre.singledomain.model <- 'Agr =~ BF02 + BF07 + RBF12 +RBF17 + RBF22 + BF27 + BF32 + RBF37 + RBF42 +  RBF47 + BF52 +BF57'
+agre.singledomain.model.fit <-cfa(agre.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
+
+agre.singledomain.model.sum <- lavaan::summary(agre.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+##Consentiousness
+cons.singledomain.model <- 'Cons =~ RBF03 + RBF08 + BF13 + BF18 + RBF23 + RBF28 + BF33 + BF38 + BF43  + RBF48 +BF53 +RBF58
+'
+cons.singledomain.model.fit <-cfa(cons.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
+
+cons.singledomain.model.sum <- lavaan::summary(cons.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+##Neuroticism
+ne.singledomain.model <- 'NE =~ RBF04 + RBF09 + BF14 + BF19 + RBF24 + RBF29 + BF34 + BF39 +RBF44 +RBF49 +BF54 + BF59'
+ne.singledomain.model.fit <-cfa(ne.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
+
+ne.singledomain.model.sum <- lavaan::summary(ne.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+
+##Open-mindedness
+om.singledomain.model <- 'OM =~ RBF05 + BF10 +BF15 +BF20 + RBF25 +RBF30 + BF35 +BF40 + RBF45 + RBF50 +RBF55 +BF60'
+
+om.singledomain.model.fit <-cfa(om.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
+
+om.singledomain.model.sum <- lavaan::summary(om.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+```
+
+
+```{r single-domain-with-acc, include =F}
+
+```
+
+
+
+# Discussion
+
+
+\newpage
+
+# References
+
+::: {#refs custom-style="Bibliography"}
+:::
