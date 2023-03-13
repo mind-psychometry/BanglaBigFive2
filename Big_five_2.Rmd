@@ -1,28 +1,29 @@
 ---
 title             : "The Bangla Big Five Inventory-2: A Comprehensive Psychmetric Validation using Classical Test Theory and Item Response Theory "
-shorttitle        : "Bangla Big Five"
+shorttitle        : "GASP"
 
 author: 
-  - name          : "First Author"
+  - name          : "Mushfiqul Anwar Siraji"
     affiliation   : "1"
-    corresponding : yes    # Define only one corresponding author
-    address       : "Postal address"
-    email         : "my@email.com"
-    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
+    role:         
       - "Conceptualization"
       - "Writing - Original Draft Preparation"
       - "Writing - Review & Editing"
-  - name          : "Ernst-August Doelle"
-    affiliation   : "1,2"
+
+  - name          : "Shamsul Haque"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Department of Psychology, Jeffrey Cheah School of Medicine and Health Sciences, Monash University Malaysia"
+    email         : "my@email.com"
+
     role:
       - "Writing - Review & Editing"
-      - "Supervision"
+
 
 affiliation:
   - id            : "1"
-    institution   : "Wilhelm-Wundt-University"
-  - id            : "2"
-    institution   : "Konstanz Business School"
+    institution   : "Department of Psychology, Jeffrey Cheah School of Medicine and Health Sciences, Monash University Malaysia"
+
 
 authornote: |
   Add complete departmental affiliations for each author here. Each new line herein must be indented, like this line.
@@ -49,7 +50,7 @@ abstract: |
 keywords          : "keywords"
 wordcount         : "X"
 
-bibliography      : c("r-references.bib","r-libs.bib")
+bibliography      : ["r-references.bib", "r-libs.bib"]
 
 floatsintext      : no
 linenumbers       : yes
@@ -61,7 +62,7 @@ tablelist         : no
 footnotelist      : no
 
 classoption       : "man"
-output            : papaja::apa6_pdf
+output            : papaja::apa6_docx
 ---
 
 ```{r setup-chunk, include=FALSE}
@@ -76,73 +77,185 @@ par(family = "Arial")
 #You need to run this chunk 1X in your system 
 #install.packages("pacman")#Run this if you don't have pacman installed.
 # renv::restore()
-pacman::p_load(MOTE, tidyverse, psych, lavaan,kableExtra,gt,gtsummary, mirt,likert,kutils,semPlot,semTable,semTools,dlookr,VIM,ggplot2,cowplot,questionr,magick, readxl)
+pacman::p_load(MOTE, tidyverse, psych, lavaan,kableExtra,gt,gtsummary, mirt,likert,kutils,semPlot,semTable,dlookr,VIM,ggplot2,cowplot,questionr,magick, readxl)
 library(readxl)
 library(gtExtras)
 library(papaja)
 library(tabledown)
+library(semTools)
 papaja::r_refs("r-libs.bib")
 # renv::snapshot()
+
 #if you dont have LaTeX installed run the following lines
 #install.packages("tinytex")
 #tinytex::install_tinytex()
 ```
 
-Personality traits are known to be relatively enduring patterns of thoughts, emotions and behaviors guiding an individual’s tendency to respond in a certain way under a given circumstance (Roberts, 2009, p. 140). There is a consensus in the literature that personality traits robustly influence our health and wellness (Strickhouser et al., 2017),  job performance (Judge et al., 2013) and academic achievement. Hence, it is critically important to measure personality traits. In that vein, a major psychometric theory in the personality field-the Big Five theory (Digman, 1990; Goldberg, 1981; John et al., 2008) was brought to light, which categorized personality traits into five independent bipolar domains: extraversion, neuroticism or negative emotionality, agreeableness, consciousness and open-mindedness. Further, in addition to this five-domain model, literature has extended its support to the hierarchical nature of the Big Five domains (Ashton et al., 1995; Goldberg, 1999; Paunonen & Ashton, 2001). The principal conceptual difference between personality trait domain and facet is the degree of conceptual breadth. The personality trait domain (i.e., extraversion) enjoys higher bandwidth of conceptual breadth and represents a large amount of behavioral information (John et al., 2008). In contrast, personality trait facets are narrowly defined (“sociable” facet under the “extraversion” domain) and provide a specific description of behaviors. 
-Rooted on the Big Five theory, a plethora of personality measures were developed, including NEO Personality Inventory-revised (Costa, 1992), International Personality Item Pool-NEO (Goldberg, 1999), and Big Five Aspect Scale (DeYoung et al., 2007). These long in-depth measures provide a clear picture of Big Five factors with incremental information regarding the facts (more specific traits located below the Big Five domain level) within each domain. However, over the years, researchers faced a major challenge of balancing the adequacy of the content of the personality measures with the length and cost-effectiveness of the procedure. To solve this puzzle, the Big Five Inventory-1 (BFI-1) was introduced nearly 20 years ago (John et al., 1991; John et al., 2008). BFI-1 incorporates 44- brief, easy-to-understand trait descriptive adjectives representing the Big Five domains to facilitate adequacy, clarity and efficiency with a substantial reduction in completion time (5-10 min depending on the reader’s ability) in comparison to other personality measures (Soto & John, 2017). However, the focus of BFI-1 was limited solely to the domain level of traits. Recently, BFI-1 received a major revision (Soto & John, 2017), where the authors incorporated the hierarchical model of personality traits by including three prominent facet traits under each Big Five domain. In the new Big Five Inventory 2 (BFI-2), the item number increased to sixty (15 facets with four items each, nested under five domains) with an equal number of positively and negatively keyed items (both at the domain and facet level) to address the acquiescent responding style-- individuals tendency of consistently providing agree or disagree response in the survey items, regardless of the item content. With more balanced item formulation, BFI-2 offers a better predictive precision (Soto & John, 2017). Soto and John (2017), in their validation study, reported satisfactory psychometric properties of BFI-2 (Cronbach’s alpha of the domains>0.80, and for facets, it ranged between 0.54 to 0.83) among the U.S. student sample (n=470). Despite the increase in length, BFI-2 still remains economical compared to other scales (Zhang et al., 2022) and has been widely used in research and applied filed. As of January 4, 2023, the initial BFI-2 paper has been cited 1387 times (Google Scholar). BFI-2 has been translated into more than 30 languages and psychometrically validated in the Chinese (Zhang et al., 2022), Turkish (Cemalcilar et al., 2021), Danish (Vedel et al., 2021), Dutch (Denissen et al., 2020), Russian (Shchebetenko et al., 2020) and German (Rammstedt et al., 2020) languages.
-
-However, it is important to acknowledge that the psychometric properties of BFI-2 were obtained from the western, educated, industrialized, rich and democratic (WEIRD) populations. Given the observed varied differences in personality domain structures and other correlates of personality traits among the personality measures across cultures, using them without proper psychometric validations on non-Western cultures would lead to erroneous interpretation (Roberts et al., 2007; Soto, 2019). To what extent these findings could be generalized to other populations, such as in Bangladesh – an Asian country remains less explored. Zhang et al. (2022), in their Chinese BFI-2 validation with four diverse samples, successfully reproduced the Big Five domains however, two facets- trust and intellectual curiosity exhibited relatively low reliability (n= 765).  Ahya and Siaputra (2022), in their validation work of Indonesian BFI-2, indicated that only 50 items exhibited satisfactory factor loading in exploratory analysis. Additionally, the five-domain structure did not yield a satisfactory field in the confirmatory factor analysis. However, the facet-level model was successfully reproduced. Altogether, the adaptation works of BFI-2 in Asian countries strengthen the necessity of psychometrically validating the BFI-2 in the Bangladeshi context to increase generalizability and precision of measurement.
-
-Further, the BFI-1, which has been widely used globally for the last 20 years in various cultural and linguistic settings, is reported to be susceptible to gender bias where women tend to score higher than men in different domains (Chiorri et al., 2016; Schmitt et al., 2008; Srivastava et al., 2003). This issue of measurement invariance (MI) across gender in BF-1 has been studied robustly (Chiorri et al., 2016). However, for the new BFI-2, MI has been investigated mostly cross-culturally: U.S. student and internet validation sample (n=1470)  VS Chinese sample (n=1718; Zhang et al., 2022), and U.S. internet validation sample (n=1000) VS German sample (n=1338; Rammstedt et al., 2020). Research on gender-based MI of BFI-2 is currently lacking, but given the growing popularity of the scale, it is highly recommended.
-Current Study
-
-We conducted the present research with the aim to psychometrically validate Big Five Inventory-2 among Bangladeshi community samples. We had set four objectives. First, we translated Big Five Inventory-2 into Bangla language. Second, we investigate the reliability and structural validity of the domain-level and facet-level structure of Bangla BFI-2 (BBFI-2). Third, we investigate the measurement invariance of the BBFI-2 across gender. Fourth, we employed item response theory (IRT) based analysis to assess the item quality of BBFI-2. Lastly, we gathered convergent validity of the scale by evaluating the correlations between the five domains of BFI-2 and the four PEN-L traits of EPQ-R.  In line with the existing literature (Colledani et al., 2018), we expected a positive correlation between the two extraversion domains of BBFI-2 and EPQ-R (H1).  A negative correlation was expected between the Psychoticism dimension of EPQ-R and the agreeableness and conscientiousness domains of BBFI-2 (H2). The neuroticism domain of EPQ-R and the negative emotionality of BBFI-2 were expected to be positively correlated (H3)
-
-
-
-# Methods
-
-
-## Participants
-
 ```{r data, include =F}
-data <- readRDS("Demodata/demodata.rds")
+
+data <- readxl::read_excel("Rawdata/Personality Project_December 28, 2022_19.48.xlsx")
+
+# create labels
+ var.labes <- data[1,]
+
+ for(i in seq_along(data)){
+   Hmisc::label(data[, i]) <- var.labes[1,i]
+ }
+
+data <- data[-1,]
+
+
+
+
+# # 7, # 35, 52, 57,
+# table(bigfive$Q5.57, data$Q2.6)
+
+
+
+data <- data %>% 
+  dplyr::select(`Q2.2`:`Q6.49`)
+
 data <- na.omit(data)
+
+
+## Recoding data$Q2.2 into data$Q2.2
+data$Q2.2 <- data$Q2.2
+data$Q2.2[data$Q2.2 == "05.10.1976"] <- "46"
+data$Q2.2[data$Q2.2 == "15/08/1985"] <- "37"
+data$Q2.2[data$Q2.2 == "16"] <- "16"
+data$Q2.2[data$Q2.2 == "১৬"] <- "16"
+data$Q2.2[data$Q2.2 == "১৭"] <- "17"
+data$Q2.2[data$Q2.2 == "১৮"] <- "18"
+data$Q2.2[data$Q2.2 == "19"] <- "19"
+data$Q2.2[data$Q2.2 == "১৯"] <- "19"
+data$Q2.2[data$Q2.2 == "20"] <- "20"
+data$Q2.2[data$Q2.2 == "২০"] <- "20"
+data$Q2.2[data$Q2.2 == "২১"] <- "21"
+data$Q2.2[data$Q2.2 == "21"] <- "21"
+data$Q2.2[data$Q2.2 == "২২"] <- "22"
+data$Q2.2[data$Q2.2 == "22"] <- "22"
+data$Q2.2[data$Q2.2 == "২২ বছর"] <- "22"
+data$Q2.2[data$Q2.2 == "23"] <- "23"
+data$Q2.2[data$Q2.2 == "২৩"] <- "23"
+data$Q2.2[data$Q2.2 == "24"] <- "24"
+data$Q2.2[data$Q2.2 == "২৪"] <- "24"
+data$Q2.2[data$Q2.2 == "25"] <- "25"
+data$Q2.2[data$Q2.2 == "২৫"] <- "25"
+data$Q2.2[data$Q2.2 == "26"] <- "26"
+data$Q2.2[data$Q2.2 == "২৬"] <- "26"
+data$Q2.2[data$Q2.2 == "27"] <- "27"
+data$Q2.2[data$Q2.2 == "২৭"] <- "27"
+data$Q2.2[data$Q2.2 == "২৮"] <- "27"
+data$Q2.2[data$Q2.2 == "28"] <- "27"
+data$Q2.2[data$Q2.2 == "29"] <- "29"
+data$Q2.2[data$Q2.2 == "২৯"] <- "29"
+data$Q2.2[data$Q2.2 == "30"] <- "30"
+data$Q2.2[data$Q2.2 == "৩০"] <- "30"
+data$Q2.2[data$Q2.2 == "৩০+"] <- "30"
+data$Q2.2[data$Q2.2 == "৩১"] <- "31"
+data$Q2.2[data$Q2.2 == "31"] <- "31"
+data$Q2.2[data$Q2.2 == "32"] <- "32"
+data$Q2.2[data$Q2.2 == "৩২"] <- "32"
+data$Q2.2[data$Q2.2 == "৩৩"] <- "33"
+data$Q2.2[data$Q2.2 == "33"] <- "33"
+data$Q2.2[data$Q2.2 == "34"] <- "34"
+data$Q2.2[data$Q2.2 == "৩৪"] <- "34"
+data$Q2.2[data$Q2.2 == "৩৪ বছর"] <- "34"
+data$Q2.2[data$Q2.2 == "৩৫"] <- "35"
+data$Q2.2[data$Q2.2 == "35"] <- "35"
+data$Q2.2[data$Q2.2 == "36"] <- "36"
+data$Q2.2[data$Q2.2 == "৩৬"] <- "36"
+data$Q2.2[data$Q2.2 == "37"] <- "37"
+data$Q2.2[data$Q2.2 == "৩৭"] <- "37"
+data$Q2.2[data$Q2.2 == "৩৭ বছর"] <- "37"
+data$Q2.2[data$Q2.2 == "38"] <- "38"
+data$Q2.2[data$Q2.2 == "৩৮"] <- "38"
+data$Q2.2[data$Q2.2 == "39"] <- "39"
+data$Q2.2[data$Q2.2 == "৩৯"] <- "39"
+data$Q2.2[data$Q2.2 == "৪০"] <- "40"
+data$Q2.2[data$Q2.2 == "40"] <- "40"
+data$Q2.2[data$Q2.2 == "41"] <- "41"
+data$Q2.2[data$Q2.2 == "৪১"] <- "41"
+data$Q2.2[data$Q2.2 == "৪২"] <- "41"
+data$Q2.2[data$Q2.2 == "42"] <- "42"
+data$Q2.2[data$Q2.2 == "43"] <- "43"
+data$Q2.2[data$Q2.2 == "৪৩"] <- "43"
+data$Q2.2[data$Q2.2 == "৪৪ বছর"] <- "44"
+data$Q2.2[data$Q2.2 == "৪৫"] <- "45"
+data$Q2.2[data$Q2.2 == "45"] <- "45"
+data$Q2.2[data$Q2.2 == "46"] <- "46"
+data$Q2.2[data$Q2.2 == "৪৬"] <- "46"
+data$Q2.2[data$Q2.2 == "৪৭"] <- "47"
+data$Q2.2[data$Q2.2 == "৪৮"] <- "48"
+data$Q2.2[data$Q2.2 == "৪৮ বছর ৪ মাস"] <- "48"
+data$Q2.2[data$Q2.2 == "49"] <- "49"
+data$Q2.2[data$Q2.2 == "৫০"] <- "50"
+data$Q2.2[data$Q2.2 == "50"] <- "50"
+data$Q2.2[data$Q2.2 == "৫০ বছর"] <- "50"
+data$Q2.2[data$Q2.2 == "৫২"] <- "52"
+data$Q2.2[data$Q2.2 == "৫২ বছর"] <- "52"
+data$Q2.2[data$Q2.2 == "54"] <- "54"
+data$Q2.2[data$Q2.2 == "৬০"] <- "60"
+data$Q2.2[data$Q2.2 == "৬৩"] <- "63"
+data$Q2.2[data$Q2.2 == "63"] <- "63"
+data$Q2.2[data$Q2.2 == "67"] <- "67"
+data$Q2.2[data$Q2.2 == "কবির"] <- "28"
+data$Q2.2 <- as.numeric(data$Q2.2)
+
 descriptives <- data %>% 
-  dplyr::select(Age:SES)
+  dplyr::select(Q2.2:Q2.8_1)
 
 
 Depression <- data %>% 
-  dplyr::select(D01:D30)
+  dplyr::select(Q3.2:Q3.31)
+
+GASP <- data %>% 
+  dplyr::select(Q4.2:Q4.17)
 
 BigFive <- data %>% 
-  dplyr::select(BF01:BF60)
+  dplyr::select(Q5.2:Q5.61)
 
 
 eysenck <- data %>% 
-  dplyr::select(EPQR01:EPQR48)
+  dplyr::select(Q6.2:Q6.49)
 
-colnames(descriptives) <- c("Age","Gender", "Marital_Status","Occupation", "Education_Years", "SES")
+#
+#
+colnames(descriptives) <- c("Age","Gender","Religion", "Marital_Status","Occupation", "Education_Years", "SES")
+colnames(GASP) <- paste("GASP", 1:16,sep = "_")
 colnames(Depression) <- paste("Depression", 1:30,sep = "_")
 colnames(BigFive) <- paste("BF", 1:60,sep = "_")
 colnames(eysenck) <- paste("EYP", 1:48,sep = "")
 
-renamed_data <- as.data.frame(c(descriptives,Depression,BigFive))
+
+renamed_data <- as.data.frame(c(descriptives,GASP,Depression,BigFive))
+# write_rds(renamed_data, "Processeddata/raw_data.rds" )
+
 ```
 
 ```{r data-wrangling}
 
 # Descriptive dataframe
+descriptives.names <- c("Age", "Gender", "Religion", "Marrital_Status", "Occupation", "Education", "SES")
+colnames(descriptives) <- descriptives.names
 
 ## Recoding descriptives$Gender
 descriptives$Gender[descriptives$Gender == "পুরুষ"] <- "Male"
 descriptives$Gender[descriptives$Gender == "স্ত্রী"] <- "Female"
 descriptives$Gender <- factor(descriptives$Gender)
 
-
+## Recoding descriptives$Religion
+descriptives$Religion <- descriptives$Religion %>%
+  fct_recode(
+    "Others" = "অন্যান্য",
+    "Islam" = "ইসলাম",
+    "Christianity" = "খ্রিস্টান",
+    "Buddhism" = "বৌদ্ধ",
+    "Hindu" = "সনাতন হিন্দু"
+  )
 
 ## Recoding descriptives$Marrital_Status
-descriptives$Marital_Status <- descriptives$Marital_Status %>%
+descriptives$Marrital_Status <- descriptives$Marrital_Status %>%
   fct_recode(
     "Unmarried" = "অবিবাহিত",
     "Divorced" = "ডিভোর্সড",
@@ -156,7 +269,19 @@ descriptives$Occupation <- factor(descriptives$Occupation)
 
 
 
+## Recoding descriptives$Education
+descriptives$Education <- descriptives$Education %>%
+  fct_recode(
+    "Post-Grad" = "ডক্টর অব ফিলোসফি",
+    "Under-Grad" = "স্নাতক",
+    "Post-Grad" = "স্নাতকোত্তর"
+  )
 
+## Reordering descriptives$Education
+descriptives$Education <- descriptives$Education %>%
+  fct_relevel(
+    "Post-Grad", "Under-Grad"
+  )
 
 # Depression dataframe
 depression.prefix <- "D"
@@ -177,6 +302,32 @@ depression <- depression %>%
   mutate(total_dep= rowSums(across(starts_with("D")), na.rm = T))
 
 
+# GASP dataframe
+gasp.prefix <- "GASP"
+gasp.sufix <- c(1:16)
+gasp_names <- paste(gasp.prefix,gasp.sufix, sep = "" )
+colnames(GASP) <-gasp_names
+
+recod_gasp <- c("একদম সম্ভাবনা নেই (0%)" =1,
+                "প্রায় সম্ভাবনা নেই (25%)" =2,
+                 "অনিশ্চিত (50%)"   =3,
+                 "প্রায় সম্ভাবনা আছে (75%)" =4,
+                 "পূর্ণ সম্ভাবনা আছে (100%)"= 5,
+                "পূর্ণ সম্ভাবনা আছে(100%)"=5)
+
+recod_gasp <-  mutate(GASP, across(starts_with("GASP"), ~unname(recod_gasp[.])))
+
+gasp <- recod_gasp
+
+# which(is.na(gasp))
+
+gasp <- gasp %>% 
+  rowwise() %>% 
+  mutate(Guilt_NBE= sum(GASP1,GASP9,GASP14,GASP16),
+         GUILT_Repair = sum(GASP2,GASP5,GASP11,GASP15),
+         Shame_NSE = sum(GASP3,GASP6,GASP10,GASP13),
+         Shame_Withdraw = sum(GASP4,GASP7,GASP8,GASP12))
+
 
 
 # Big Five 2 dataframe
@@ -186,7 +337,7 @@ bigfive_names <- paste(bigfive.prefix,bigfive.sufix, sep = "" )
 colnames(BigFive) <-bigfive_names
 
 
-recod_bigfive <- c("একেবারেই সমর্থন করিনা"=1,
+recod_bigfive <- c("একেবারেই সমর্থন করি না"=1,
                  "সমর্থন করি না" =2,
                  "অনিশ্চিত"  =3,
                  "সমর্থন করি" =4,
@@ -202,14 +353,16 @@ bigfive <- recod_bigfive
 
 
 # ## Reverse coding of BigFive 2
-# Recoding bigfive$BF11 into bigfive$RBF11
-bigfive$RBF11 <- as.character(bigfive$BF11)
-bigfive$RBF11[bigfive$BF11 == "1"] <- "5"
-bigfive$RBF11[bigfive$BF11 == "2"] <- "4"
-bigfive$RBF11[bigfive$BF11 == "3"] <- "3"
-bigfive$RBF11[bigfive$BF11 == "4"] <- "2"
-bigfive$RBF11[bigfive$BF11 == "5"] <- "1"
-bigfive$RBF11 <- as.numeric(bigfive$RBF11)
+## Recoding bigfive$BF11 into bigfive$RBF11
+# bigfive$RBF11 <- as.character(bigfive$BF11)
+# bigfive$RBF11[bigfive$BF11 == "1"] <- "5"
+# bigfive$RBF11[bigfive$BF11 == "2"] <- "4"
+# bigfive$RBF11[bigfive$BF11 == "3"] <- "3"
+# bigfive$RBF11[bigfive$BF11 == "4"] <- "2"
+# bigfive$RBF11[bigfive$BF11 == "5"] <- "1"
+# bigfive$RBF11 <- as.numeric(bigfive$RBF11)
+bigfive$RBF11 <- as.numeric(bigfive$BF11)
+# bigfive$RBF11 <- bigfive$BF11
 
 ## Recoding bigfive$BF16 into bigfive$RBF16
 bigfive$RBF16 <- as.character(bigfive$BF16)
@@ -801,7 +954,7 @@ desc_table <- descriptives%>%
     digits = all_continuous() ~ 2,
     label = list(Age ~ "Age",
                  SES ~ "Socio-economic Status",
-                 Marital_Status~ "Marrital Status"),
+                 Marrital_Status~ "Marrital Status"),
     missing = "no",
     sort = all_categorical() ~ "frequency",
     ) %>% add_overall() %>% bold_labels() %>% 
@@ -820,12 +973,13 @@ male <- as.tibble(des$Male)
 
 ```
 
+
 ```{r description-tab,  results='asis'}
 papaja::apa_table(des_gt_Gender_hux)
 ```
 
 
-A large scale online survey was conducted to collect data from Bangladeshi adults (n=`r nrow(data)`). Any Bangladeshi citizen aged >18 years and were able to read and write Bangla language was eligible to participate in the survey. The completion rate of our survey was 100% (0 participants' data was excluded due to incompleteness). Out of `r nrow(data)` participants, `r female[1,2]` were female ranging in age from `r female[1,8]` to `r female[1,9]` years (`r round(female[1,3],2)`±`r round(female[1,4],2)`). `r male[1,2]`  were male with an age range between `r male[1,8]` to `r male[1,9]` years (`r round(male[1,3],2)`±`r round(male[1,4],2)`). Majority of the participants had at least a Bachelor Degree (`r desc_tibble[16,2]`) and were married (`r desc_tibble[9,2]`). The mean score of perceived social stance measured by a 10-point ladder was `r round(female[7,3],2)`±`r round(female[7,4],2)` for female, and `r round(male[7,3],2)`±`r round(male[7,4],2)` for male. 
+A large scale online survey was conducted to collect data from Bangladeshi adults (n=700). Any Bangladeshi citizen aged >18 years and were able to read and write Bangla language was eligible to participate in the survey. The completion rate of our survey was 93% (50 participants' data was excluded due to incompleteness). Out of `r nrow(data)` participants, `r female[1,2]` were female ranging in age from `r female[1,8]` to `r female[1,9]` years (`r round(female[1,3],2)`±`r round(female[1,4],2)`). `r male[1,2]`  were male with an age range between `r male[1,8]` to `r male[1,9]` years (`r round(male[1,3],2)`±`r round(male[1,4],2)`). Majority of the participants had at least a Bachelor Degree (`r desc_tibble[16,2]`) and were married (`r desc_tibble[9,2]`). The mean score of perceived social stance measured by a 10-point ladder was `r round(female[7,3],2)`±`r round(female[7,4],2)` for female, and `r round(male[7,3],2)`±`r round(male[7,4],2)` for male. 
 
 ## Material
 
@@ -839,11 +993,17 @@ A large scale online survey was conducted to collect data from Bangladeshi adult
 
 ## Data analyses
 
-We used R with several statistical packages, including esemComp (Mateus & Leon, 2022), lavaan (Rosseel, 2012) and tabledown (Siraji, 2022) to analyze our data. First, we explored the descriptive statistics and estimated the reliability of each domain and facet of BBFI-2. Second, we estimated the reliability of BBFI-2 and investigated the structural validity of the scale. We investigated the domain-level structural validity of BBFI-2 using Exploratory Structural Analysis Modeling (ESEM)- a substantive-methodological synergy that integrates the computational power of confirmatory factor analysis and exploratory factor analysis (Asparouhov & Muthén, 2009; Tóth-Király et al., 2017). At domain level latent structure, we examined whether the five BBFI-2 domains could be recovered in our sample using item-level (each item serve as an indicator of the Big Five domain). In ESEM, we allowed all items to load on all five domains using a rotated target matrix (60 x 5) where the primary loading’s positions were left unspecified, and the cross-loadings were set to zero. To assess the model fit we followed the popular suggestions of Hu and Bentler (1999): Comparative fit index (CFI) and the Tucker Lewis index (TLI): good fit ≥.95, acceptable fit≥.90); the root means square error of approximation (RMSEA): good fit < .06, acceptable fit <.08; and the standardized root mean square (SRMR) good fit<.08, acceptable fit <.10.
-We investigated the facet-level structural validity of each domain using CFA with the “Weighted Least Square with mean and variance” (WSMV) estimator.  Here, we have tested the five models that Soto and John (2017) used in their study to investigate the facet level structure of BFI-2: (M1) Single Domain Structure- all 12 items of a domain were allowed to load on a single factor; (M2) Single Domain with acquiescence- in addition to the single domain factor an acquiescence method factor was added. In line with their study, we forced constrained the factor loadings of all items on the acquiescence factor to be equal to 1 making both true-keyed and false-keyed items load in the same direction. To ensure the proper representation of individual differences that are caused by response pattern style but not due to personality content, the acquiescence factor was not allowed to correlate with domain factors; (M3) positive and negative items-two correlated factors where true keyed items were loaded on one factor, and false-keyed were loaded on another; (M4) the three facets model- represents the three facets within each Big Five Domain; (M5) three facets plus acquiescence model- An acquiescence factor was added to the three facets model. In this model, each item was allowed to load on its corresponding facet as well as on the acquiescence method factor. All factor loadings in the acquiescence factor were constrained to 1, and no correlation was allowed between the acquiescence factor and the three facets. To assess the model fit, we followed the aforementioned guideline.
-Third, we extended the ESEM-based five-domain model to investigate the full measurement invariance using the 13-model taxonomy of  Marsh et al. (2009) across gender. The use of the ESEM model allowed us to compare the invariance at the item level using raw data, thus accounting for individual item functioning. Typically, measurement invariance investigation incorporates a sequence of model fit testing starting with the least restricted model-configural invariance with no parameter invariance constraint (Meredith, 1993). Weak measurement invariance model constraints factor loading across the groups. Strong measurement invariance assumes the indicator means and factor loadings to be invariant over groups. Strict Measurement invariance constrains the factor loadings, indicator means, and item uniquenesses from being equal over the groups. Marsh et al. (2010) proposed 13 model taxonomy expand these four-model-based invariance testing by integrating both factorial and measurement invariance techniques where the sequence of testing propagates from configural invariance to a model of full invariance that posits strict invariance as well as the invariance of latent mean and factor variance–covariance matrix. At least strict measurement invariance is required to compare the BBFI-2 scale’s score across- males and females (for a more extended discussion of 13 model taxonomy, see  Marsh et al. (2009)).
-Fourth, we subjected each facet to item response theory-based item analysis. For each facet we fitted a graded response based IRT model (Samejima, 1970) with marginal maximum likelihood estimation method with MHRM algorithm. We gathered information on item difficulty, discrimination, and test information. We assessed the local fit of the items using infit, outfit, S-χ^2 and S-χ^2 associated RMSEA statistics. Person-fit was assessed using Z_h statistics.
-Lastly, we investigated the concurrent validity of the domains and facets of Big-Five-2 with EPQ-R using Pearson’s product moment correlation.
+We used R with several statistical packages including esemComp, lavaan and tabledown to analyze our data. First, we explored the descriptive statistics and estimated the reliability of each domain and facet of Big five 2 inventories. Second, we investigated domain level structural validity of BF2 inventories by conventional confirmatory factor analysis (CFA) as well as Exploratory Structural Analysis Modeling (ESEM)- a substantive-methodological synergy that integrates the computational power of confirmatory factor analysis and exploratory factor analysis. At domain level latent structure we examined whether BF2 factors could be recovered in our sample using item-level (each item serve as an indicator of the Big Five domain). In ESEM we allowed all items to load on all five domain factors using a rotated target matrix (60 x 5) where the primary loading's positions were left unspecified and the cross-loadings were set to zero. In CFA analysis we used "Weighted Least Square with mean and variance" (WSMV) estimator. To assess the model fit we followed the popular suggestions of @RN1162: Comparative fit index (CFI) and the Tucker Lewis index (TLI): good fit $\geq$.95, acceptable fit$\geq$.90); the root mean square error of approximation (RMSEA): good fit < .06, acceptable fit <.08; and the standardized root mean square (SRMR) good fit<.08, acceptable fit <.10.
+
+Third, we investigated the facet level structural validity of each domain using CFA with an aim to confirm the three-facet structure of each domain. Here, we have tested the five models soto and jon used in their study to investigate the facet level structure of BF2:
+(M1) Single Domain Structure- all 12 items of a domain was allowed to load on a single factor; (M2) Single Domain with acquiescence- in addition to the single domain factor an acquiescence method factor was added. In line with with their, study, we forced  constrained the factor loadings of all items on the acquiescence factor to be equal to 1 making both true-keyed and false-keyed items to load in the same direction. To ensure the proper representation of individual differences that is caused by response pattern style but not due to personality content, the acquiescence factor were not allowed to correlated with domain factors; (M3) positive and negative items-two correlataed factors where true keyed items were loaded on one factor and false-keyed were loaded on another; (M4) the three facets model- represents the three facets within each Big Five Domain; (M5) three facets plus acquiescence model- An acquiescence factor was added to the the three facets model. In this model each item was allowed to load on its corresponding facet as well as on acquiescence method factor. All factor loadings in the acquiescence factor were constrained to equal 1 and no correlation was allowed between the acquiescence factor and the three facets. To assess the model fit we followed the aforementioned guideline.
+
+Fourth, we extended the ESEM based domain level model to investigates the full measurement invariance using Marsh et al (2009) proposed 13 model taxonomy. This allowed us compare the invariance at the item level using raw data, thus accounting for individual item functioning. This 13-model taxonomy integrates factorial and measurement invariance techniques (ref from a new look at the big five). Typically measurement invariance investigation incorporates a sequence of model fit testing  starting with least restricted model-configural invariance with no parameter invariance constrain. Weak measurement invariance model constraints factor loading across the groups. Strong measurement invariance assumes the indicator means and factor loadings to be invariance over groups. Strict Measurement invariance constrain the factor loadings, indicator means, and item uniquenesses to be equal over the groups. Marsh et al (2009) proposed 13 model taxonomy expand these four model based invariance testing where the sequence of testing propagates  from configural invariance to a model of full invariance that posits strict invariance and the invariance of latent mean and factor variance– covariance matrix. To compare BF2 scale's score across different groups at least strict measurement invariance is required (see Table 1; for a more extended discussion of these issues, see also Marsh et al., 2009)
+.
+
+Fifth, we developed two abridged versions of Bangla Big five 2: 15-item BBFI-2-XS and 30 item-BBFI2-S. To accurately represent the content and structure of the full BFI-2, we fiited "graded response" based IRT models with for each facet using "mirt" package [@R-mirt] and selected items with the highest discrimination index from each facet. For the 30 item-BBFI-2-S we supplemented the 15-item BBFI2-XS with one additional item from each facets. To select the second item we used the following criteria: (a) the discrimination index of the items; (c) And, ensuring that the BBFI-2-S included one true-keyed item and one false-keyed item for each facet. In IRT we employed marginal maximum likelihood estimation method with MHRM algorithm. We gathered information on item difficulty, discrimination, item information and test information. We assessed the local fit of the items using S-$\chi^2$ and RMSEA statistics. Person-fit was assessed using $Z_h$ statistics. 
+
+Lastly, we investigated the concurrent validity of the domains and facets of Big-Five-2 (60 items, 30 items and 15 items) with GASP depression and EYP
 
 
 # Results
@@ -886,15 +1046,15 @@ open_mind_alpha_ordinal <- psych::alpha(polychoric(open_mind_rel_data)$rho)
 
 
 
-# extroversion_omega <- coefficientalpha::omega(extroversion_rel_data)
-# 
-# agreebleness_omega <- coefficientalpha::omega(agreebleness_rel_data)
-# 
-# conscientiousness_omega <- coefficientalpha::omega(conscientiousness_rel_data)
-# 
-# negative_emotionality_omega <- coefficientalpha::omega(negative_emotionality_rel_data)
-# 
-# open_mind_alpha_omega <- coefficientalpha::omega(open_mind_rel_data)
+extroversion_omega <- coefficientalpha::omega(extroversion_rel_data)
+
+agreebleness_omega <- coefficientalpha::omega(agreebleness_rel_data)
+
+conscientiousness_omega <- coefficientalpha::omega(conscientiousness_rel_data)
+
+negative_emotionality_omega <- coefficientalpha::omega(negative_emotionality_rel_data)
+
+open_mind_alpha_omega <- coefficientalpha::omega(open_mind_rel_data)
 
 
 ```
@@ -954,14 +1114,36 @@ fitmeasures (esem_fit ,c("gfi", "agfi", "nfi","rfi", "cfi.scaled","tli.scaled","
 
 library("semTools")
 
-saveFile(esem_fit, "Processeddata/esem_domain_factor_loadings.txt","coef", tableFormat = T)
+# saveFile(esem_fit, "Figures/esem_domain.txt","coef", tableFormat = T)
 ```
 
 ```{r esem-domain-invariance-gender, eval=FALSE, include=FALSE}
+# model 1 none configural
+# model 2 loadings weak 
+# model 3 loadings residuals
+# model 4 loading factor cov
+# model 5 loading intercepts strong
+# model 6 loadings residuals factor cov
+# model 7 loading residuals intercepts  strict
+# model 8 loading factor cov intercepts
+# model 9 =Loadings, Residuals, Factor V/Cov, Intercepts
+# 
+# model 10= Loadings, Intercepts, Factor Means
+# 
+# model 11= Loadings, Residuals, Intercepts, Factor Means
+# 
+# model 12=Loadings, Factor V/Cov, Intercepts, Factor Means  
+# 
+# model 13= Loadings, Residuals, Factor V/Cov, Intercepts, Factor Means  
+
+
+
+#Masrh  13 Model Taxonomy
 
 invariance_data <- cbind(descriptives$Gender,descriptives$Occupation, esem_data_2)
 
 colnames(invariance_data)[1] <- "Gender" 
+colnames(invariance_data)[2] <- "Occupation" 
 
 invariance_data_model <- esem_model
 
@@ -1301,13 +1483,325 @@ full_invariance_table_gender <- readRDS("Processeddata/Invariance_data/invarianc
 ```
 
 ```{r esemloading-tab}
-esem_loadings <- read_csv("Processeddata/esem_domain_factor_loadings.csv")
+esem_loadings <- read_excel("Processeddata/ESEM_domain_factorloadings.xlsx")
 ```
 
 ```{r esemloadings, results='asis'}
 apa_table(esem_loadings,landscape = F, caption = "IRT Description")
 ```
 
+```{r esem-domain-invariance-occupation, eval=FALSE, include=FALSE}
+
+#Masrh  13 Model Taxonomy
+
+# invariance_data <- cbind(descriptives$Gender,descriptives$Occupation, esem_data_2)
+# 
+# colnames(invariance_data)[1] <- "Gender" 
+# colnames(invariance_data)[2] <- "Occupation" 
+# 
+# invariance_data_model <- esem_model
+
+
+#Model 1
+invariance_model_1 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV")
+
+
+invariance_model_1_summary <- summary(invariance_model_1, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_1_fitindices <- fitmeasures (invariance_model_1,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_1, "Processeddata/Invariance_data/invariance_model_1_occupation.rds")
+
+#Model 2: Weak/metric
+
+invariance_model_2 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = "loadings")
+
+
+invariance_model_2_summary <- summary(invariance_model_2, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_2_fitindices <- fitmeasures (invariance_model_2,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_2, "Processeddata/Invariance_data/invariance_model_2_occupation.rds")
+
+
+
+#Model 3
+
+invariance_model_3 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals"))
+
+invariance_model_3_summary <- summary(invariance_model_3, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_3_fitindices <- fitmeasures (invariance_model_3,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+            
+
+write_rds(invariance_model_3, "Processeddata/Invariance_data/invariance_model_3_occupation.rds")
+
+
+
+#Model 4
+
+invariance_model_4 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","lv.variances","lv.covariances"))
+
+invariance_model_4_summary <- summary(invariance_model_4, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_4_fitindices <- fitmeasures (invariance_model_4,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_4, "Processeddata/Invariance_data/invariance_model_4_occupation.rds")
+
+
+#Model 5: Strong/Scaler
+
+invariance_model_5 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts"))
+
+invariance_model_5_summary <- summary(invariance_model_5, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_5_fitindices <- fitmeasures (invariance_model_5,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_5, "Processeddata/Invariance_data/invariance_model_5_occupation.rds")
+
+
+#Model 6
+
+invariance_model_6 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_6_summary <- summary(invariance_model_6, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_6_fitindices <- fitmeasures (invariance_model_6,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_6, "Processeddata/Invariance_data/invariance_model_6_occupation.rds")
+
+
+
+#Model 7: Strict/residual
+
+invariance_model_7 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "residuals"))
+
+invariance_model_7_summary <- summary(invariance_model_7, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_7_fitindices <- fitmeasures (invariance_model_7,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_7, "Processeddata/Invariance_data/invariance_model_7_occupation.rds")
+
+
+#Model 8
+
+invariance_model_8 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances"))
+
+invariance_model_8_summary <- summary(invariance_model_8, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_8_fitindices <- fitmeasures (invariance_model_8,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_8, "Processeddata/Invariance_data/invariance_model_8_occupation.rds")
+
+#Model 9
+
+invariance_model_9 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_9_summary <- summary(invariance_model_9, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_9_fitindices <- fitmeasures (invariance_model_9,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_9, "Processeddata/Invariance_data/invariance_model_9_occupation.rds")
+
+
+#Model 10
+
+invariance_model_10 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "means"))
+
+invariance_model_10_summary <- summary(invariance_model_10, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_10_fitindices <- fitmeasures (invariance_model_10,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_10, "Processeddata/Invariance_data/invariance_model_10_occupation.rds")
+
+
+#Model 11
+
+invariance_model_11 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "residuals","intercepts", "means"))
+
+invariance_model_11_summary <- summary(invariance_model_11, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_11_fitindices <- fitmeasures (invariance_model_11,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_11, "Processeddata/Invariance_data/invariance_model_11_occupation.rds")
+
+
+#Model 12
+
+invariance_model_12 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_12_summary <- summary(invariance_model_12, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_12_fitindices <- fitmeasures (invariance_model_12,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_12, "Processeddata/Invariance_data/invariance_model_12_occupation.rds")
+
+
+
+#Model 13
+
+invariance_model_13 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_13_summary <- summary(invariance_model_13, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_13_fitindices <- fitmeasures (invariance_model_13,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_13, "Processeddata/Invariance_data/invariance_model_13_occupation.rds")
+
+
+
+
+
+
+models <-  list("M1" = invariance_model_1, 
+                "M2" = invariance_model_2, 
+                "M3" = invariance_model_3, 
+                "M4" = invariance_model_4,
+                "M5"=invariance_model_5,
+                "M6"=invariance_model_6,
+                "M7"=invariance_model_7,
+                "M8"=invariance_model_8,
+                "M9"=invariance_model_9,
+                "M10"=invariance_model_10,
+                "M11"=invariance_model_11,
+                "M12"=invariance_model_12,
+                "M13"=invariance_model_13)
+
+
+
+esem_invariance.table <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+
+esem_invariance.table <- esem_invariance.table %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance.table, "Processeddata/Invariance_data/invariance_data_table_esem__occupation.rds")
+
+esem_invariance.table_scaled <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table_scaled) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+esem_invariance_table_scaled <- esem_invariance.table_scaled %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance_table_scaled, "Processeddata/Invariance_data/invariance_data_table_esem_occupation_scaled.rds")
+
+```
 
 ```{r}
 esem_invariance_data <- readRDS("Processeddata/Invariance_data/invariance_data_table_esem_gender.rds")
@@ -1384,6 +1878,318 @@ library("semTools")
 
 ```
 
+```{r esem-facet-invariance-gender, eval=FALSE, include=FALSE}
+
+
+
+invariance_data <- cbind(descriptives$Gender,descriptives$Occupation, facet_esem_data)
+
+colnames(invariance_data)[1] <- "Gender"
+colnames(invariance_data)[2] <- "Occupation"
+
+invariance_data_model <- facet_esem_model
+
+
+#Model 1
+invariance_model_1 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  control=list(iter.max=20000))
+
+
+invariance_model_1_summary <- summary(invariance_model_1, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_1_fitindices <- fitmeasures (invariance_model_1,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_1, "Processeddata/Invariance_data/facet_invariance_model_1_gender.rds")
+
+#Model 2: Weak/metric
+
+invariance_model_2 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = "loadings")
+
+
+invariance_model_2_summary <- summary(invariance_model_2, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_2_fitindices <- fitmeasures (invariance_model_2,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_2, "Processeddata/Invariance_data/invariance_model_2_gender.rds")
+
+
+
+#Model 3
+
+invariance_model_3 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals"))
+
+invariance_model_3_summary <- summary(invariance_model_3, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_3_fitindices <- fitmeasures (invariance_model_3,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+            
+
+write_rds(invariance_model_3, "Processeddata/Invariance_data/invariance_model_3_gender.rds")
+
+
+
+#Model 4
+
+invariance_model_4 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","lv.variances","lv.covariances"))
+
+invariance_model_4_summary <- summary(invariance_model_4, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_4_fitindices <- fitmeasures (invariance_model_4,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_4, "Processeddata/Invariance_data/invariance_model_4_gender.rds")
+
+
+#Model 5: Strong/Scaler
+
+invariance_model_5 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts"))
+
+invariance_model_5_summary <- summary(invariance_model_5, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_5_fitindices <- fitmeasures (invariance_model_5,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_5, "Processeddata/Invariance_data/invariance_model_5_gender.rds")
+
+
+#Model 6
+
+invariance_model_6 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_6_summary <- summary(invariance_model_6, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_6_fitindices <- fitmeasures (invariance_model_6,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_6, "Processeddata/Invariance_data/invariance_model_6_gender.rds")
+
+
+
+#Model 7: Strict/residual
+
+invariance_model_7 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "residuals"))
+
+invariance_model_7_summary <- summary(invariance_model_7, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_7_fitindices <- fitmeasures (invariance_model_7,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_7, "Processeddata/Invariance_data/invariance_model_7_gender.rds")
+
+
+#Model 8
+
+invariance_model_8 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances"))
+
+invariance_model_8_summary <- summary(invariance_model_8, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_8_fitindices <- fitmeasures (invariance_model_8,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_8, "Processeddata/Invariance_data/invariance_model_8_gender.rds")
+
+#Model 9
+
+invariance_model_9 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_9_summary <- summary(invariance_model_9, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_9_fitindices <- fitmeasures (invariance_model_9,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_9, "Processeddata/Invariance_data/invariance_model_9_gender.rds")
+
+
+#Model 10
+
+invariance_model_10 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "means"))
+
+invariance_model_10_summary <- summary(invariance_model_10, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_10_fitindices <- fitmeasures (invariance_model_10,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_10, "Processeddata/Invariance_data/invariance_model_10_gender.rds")
+
+
+#Model 11
+
+invariance_model_11 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "residuals","intercepts", "means"))
+
+invariance_model_11_summary <- summary(invariance_model_11, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_11_fitindices <- fitmeasures (invariance_model_11,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_11, "Processeddata/Invariance_data/invariance_model_11_gender.rds")
+
+
+#Model 12
+
+invariance_model_12 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_12_summary <- summary(invariance_model_12, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_12_fitindices <- fitmeasures (invariance_model_12,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_12, "Processeddata/Invariance_data/invariance_model_12_gender.rds")
+
+
+
+#Model 13
+
+invariance_model_13 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_13_summary <- summary(invariance_model_13, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_13_fitindices <- fitmeasures (invariance_model_13,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_13, "Processeddata/Invariance_data/invariance_model_13_gender.rds")
+
+
+
+
+
+
+models <-  list("M1" = invariance_model_1, 
+                "M2" = invariance_model_2, 
+                "M3" = invariance_model_3, 
+                "M4" = invariance_model_4,
+                "M5"=invariance_model_5,
+                "M6"=invariance_model_6,
+                "M7"=invariance_model_7,
+                "M8"=invariance_model_8,
+                "M9"=invariance_model_9,
+                "M10"=invariance_model_10,
+                "M11"=invariance_model_11,
+                "M12"=invariance_model_12,
+                "M13"=invariance_model_13)
+
+
+
+esem_invariance.table <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+
+esem_invariance.table <- esem_invariance.table %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance.table, "Processeddata/Invariance_data/invariance_data_table_esem_gender.rds")
+
+esem_invariance.table_scaled <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table_scaled) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+esem_invariance_table_scaled <- esem_invariance.table_scaled %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance_table_scaled, "Processeddata/Invariance_data/invariance_data_table_esem_gender_scaled.rds")
+
+```
 
 ```{r CFA-domain, eval=FALSE, include=FALSE}
 #Not accepted
@@ -2051,6 +2857,7 @@ om_all_model_fit <- rownames_to_column(om_all_model_fit)
 ```
 
 
+
 ```{r cfa-facet, include=F}
 facet_cfa <- rbind(extraversion_all_model_fit,agree_all_model_fit,cons_all_model_fit,
                    ne_all_model_fit,om_all_model_fit)
@@ -2060,6 +2867,176 @@ facet_cfa <- rbind(extraversion_all_model_fit,agree_all_model_fit,cons_all_model
 apa_table(facet_cfa,landscape = F, caption = "IRT Description")
 ```
 
+```{r netwrok,eval=FALSE}
+library(bootnet)
+library(snow)
+network_data <-  esem_data_2 %>% dplyr::select(BF1, RBF16,BF46,RBF31,BF21, RBF36, RBF51,BF6,BF11,BF41, BF56,RBF26)
+
+net_modSelect <- estimateNetwork(network_data, 
+              default = "ggmModSelect",
+              stepwise = FALSE,
+              corMethod = "cor")
+
+
+traits <- c("F1","F1","F1","F1","F2","F2","F2","F2","F3","F3","F3","F3")
+
+
+items <- colnames(network_data)
+
+network_plot <-  plot(net_modSelect, 
+     layout = "spring",
+     groups = traits,
+     label.cex = 0.7, # scalar on label size
+     label.color = 'blue', # string on label colors
+     label.prop = 0.9, # proportion of the width of the node that the label scales
+     
+     # Edges (pp. 33-34)
+     negDashed = T, # should negative edges be dashed?
+     
+     # Legend (p. 35-36)
+     legend.cex = 0.27, # scalar of the legend
+     legend.mode = 'style2', # default is 'style1'
+     nodeNames = items, # names for each node to plot in legend
+     
+     # Generical graphical arguments (p. 36)
+     font = 2)
+
+
+qgraph::centralityPlot(net_modSelect, include = "all", orderBy = "ExpectedInfluence")
+# 
+# bootnet_case_dropping <- bootnet(net_modSelect, 
+#                                  nBoots = 2500,
+#                                  type = "case",
+#                                  nCores = 8)
+# 
+# # write_rds(bootnet_case_dropping, "ProcessdData/network_boot_2500.rds")
+# 
+# boot_data <- readRDS("ProcessdData/network_boot_2500.rds")
+# plot(boot_data, 'all')
+
+
+# gvar_boot <- bootnet(net_modSelect, nBoots = 10, nCores = 8)
+# plot(gvar_boot, graph = "contemporaneous", plot = "interval")
+# 
+# plot(gvar_boot,order="sample", plot="area", prop0=TRUE)
+# plot(gvar_boot, order="sample", plot="difference", onlyNonZero=TRUE)
+# plot(gvar_boot, plot = "interval", split0 = TRUE, order="sample", labels=FALSE)
+
+
+```
+
+```{r Big-five-SO-CFA, eval=FALSE, include=FALSE}
+#Not accepted
+big.five.model.1<- 
+'Soc =~ BF1 + RBF16 + BF46+RBF31
+Ass =~  BF21 +RBF36 +RBF51+BF6
+EL =~ BF11+BF41+ BF56+RBF26
+Compassion =~ BF2+RBF17+BF32+RBF47
+Respect =~ BF7+RBF22+RBF37+BF52
+Trust =~ RBF12+BF27+RBF42+BF57
+Organization =~ RBF3 + BF18 +BF33 +RBF48
+Productiveness=~ RBF8 + RBF23+ BF38 +BF53
+Responsibility =~ BF13+RBF28+BF43+RBF58
+Anxiety=~RBF4 +BF19 +BF34 +RBF49
+Depresion=~RBF9+RBF24+BF39+BF54
+EV=~BF14 +RBF29 +RBF44+BF59 
+IC =~ BF10+RBF25+BF40+RBF55
+AS=~RBF5+BF20+BF35 + RBF50
+CI=~BF15 +RBF30 + RBF45  +BF60
+
+acc=~1*BF1 + 1*RBF16 + 1*BF46+ 1*RBF31+1*BF21 +1*RBF36 +1*RBF51+1*BF6+1*BF11+1*BF41+ 1*BF56+1*RBF26+1*BF2+1*RBF17+1*BF32+1*RBF47+1*BF7+1*RBF22+1*RBF37+1*BF52+1*RBF12+1*BF27+1*RBF42+1*BF57+1*RBF3 + 1*BF18 +1*BF33+ 1*RBF48+1*RBF8 + 1*RBF23+ 1*BF38 +1*BF53+1*BF13+1*RBF28+1*BF43+1*RBF58+1*RBF4 +1*BF19 +1*BF34 +1*RBF49+1*RBF9+1*RBF24+1*BF39+1*BF54+1*BF14 +1*RBF29 +1*RBF44+1*BF59+1*RBF4 +1*BF19 +1*BF34 +1*RBF49+1*RBF9+1*RBF24+1*BF39+1*BF54+1*BF14 +1*RBF29 +1*RBF44+1*BF59+1*BF10+1*RBF25+1*BF40+1*RBF55+1*RBF5+1*BF20+1*BF35 + 1*RBF50+1*BF15 +1*RBF30 + 1*RBF45  +1*BF60
+
+
+Extra=~ Soc+Ass+EL
+Agreeableness=~Compassion+Respect+Trust
+Cons=~Organization+Productiveness+Responsibility
+NE=~Anxiety+Depresion+EV
+OM=~IC+AS+CI
+Soc~~0*acc
+Ass~~0*acc
+EL~~0*acc
+Compassion~~0*acc
+Respect~~0*acc
+Trust~~0*acc
+Organization~~0*acc
+Productiveness~~0*acc
+Responsibility~~0*acc
+Anxiety~~0*acc
+Depresion~~0*acc
+EV~~0*acc
+IC~~0*acc
+AS~~0*acc
+CI~~0*acc
+'
+
+big.five.1.fit <-cfa(big.five.model.1, data = bigfive, estimator = "WLSMV",ordered=T, mimic = "Mplus")
+
+big.five.sum.1 <- lavaan::summary(big.five.1.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+big.five..fit.ind.2 <- fitmeasures (big.five.1.fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+```
+
+```{r IRT-data-set-up, eval=F}
+library(paran)
+esem_data <- bigfive %>% 
+  dplyr::select(BF1, BF6, RBF11,RBF16, BF21, RBF26, RBF31, RBF36, BF41 ,BF46 , RBF51 , BF56,
+                
+        BF2 , BF7 , RBF12 ,RBF17 , RBF22 , BF27 , BF32 , RBF37 , RBF42 ,  RBF47 , BF52 ,BF57, 
+        RBF3 , RBF8 , BF13 , BF18 , RBF23 , RBF28 , BF33 , BF38 , BF43  , RBF48 ,BF53 ,RBF58,
+        
+        RBF4 , RBF9 , BF14 , BF19 , RBF24 , RBF29 , BF34 , BF39 ,RBF44 ,RBF49 ,BF54 , BF59,
+         
+        RBF5 , BF10 ,BF15 ,BF20 , RBF25 ,RBF30 , BF35 ,BF40 , RBF45 , RBF50 ,RBF55 ,BF60)
+
+
+esem_data_2 <- as.data.frame(lapply(esem_data, as.numeric))
+
+extroversion <- esem_data_2 %>% dplyr::select(BF1, BF46, RBF36, RBF51,BF6, RBF11,BF41, BF56,RBF26)
+
+
+agreebleness <-   esem_data_2 %>% dplyr::select(BF2,RBF17,BF32,RBF47, BF7,RBF22,RBF37,BF52, RBF12,BF27,RBF42,BF57)
+
+conscientiousness<-   esem_data_2 %>% dplyr::select(RBF3 , BF18 ,BF33 ,RBF48, RBF8 , RBF23, BF38 ,BF53, BF13,RBF28,BF43,RBF58)
+
+
+
+negative_emotionality<-   esem_data_2 %>% dplyr::select(RBF4 ,BF19 ,BF34 ,RBF49,RBF9,RBF24,BF39,BF54,BF14 ,RBF29 ,RBF44,BF59 )
+
+
+open_mind <-   esem_data_2 %>% dplyr::select(BF10,RBF25,BF40,RBF55, RBF5,BF20,BF35 , RBF50,BF15 ,RBF30 , RBF45  ,BF60)
+
+
+extroversion_Horn <- paran(extroversion, iterations=500, centile=0, quietly=FALSE,
+           status=TRUE, all=FALSE, cfa=FALSE, graph=TRUE,
+           color=TRUE, col=c("black","red","blue"),
+           lty=c(1,2,3), lwd=1, legend=TRUE, 
+           width=640, height=640, grdevice=png, seed=0, mat=NA)
+
+agreebleness_Horn <- paran(agreebleness, iterations=500, centile=0, quietly=FALSE,
+           status=TRUE, all=FALSE, cfa=FALSE, graph=TRUE,
+           color=TRUE, col=c("black","red","blue"),
+           lty=c(1,2,3), lwd=1, legend=TRUE, 
+           width=640, height=640, grdevice=png, seed=0, mat=NA)
+
+conscientiousness_Horn <- paran(conscientiousness, iterations=500, centile=0, quietly=FALSE,
+           status=TRUE, all=FALSE, cfa=FALSE, graph=TRUE,
+           color=TRUE, col=c("black","red","blue"),
+           lty=c(1,2,3), lwd=1, legend=TRUE, 
+           width=640, height=640, grdevice=png, seed=0, mat=NA)
+
+negative_emotionality_Horn <- paran(negative_emotionality, iterations=500, centile=0, quietly=FALSE,
+           status=TRUE, all=FALSE, cfa=FALSE, graph=TRUE,
+           color=TRUE, col=c("black","red","blue"),
+           lty=c(1,2,3), lwd=1, legend=TRUE, 
+           width=640, height=640, grdevice=png, seed=0, mat=NA)
+
+open_mind_Horn <- paran(open_mind, iterations=500, centile=0, quietly=FALSE,
+           status=TRUE, all=FALSE, cfa=FALSE, graph=TRUE,
+           color=TRUE, col=c("black","red","blue"),
+           lty=c(1,2,3), lwd=1, legend=TRUE, 
+           width=640, height=640, grdevice=png, seed=0, mat=NA)
+
+```
 
 ```{r Bigfive-irt, include=F}
 #15 Facet df
@@ -2287,6 +3264,8 @@ as.item_misfits <- subset(as.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
 ci.item_misfits <- subset(ci.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
 ```
 
+
+
 ```{r}
 #Item discrimination
 very.low <- sum(all_item_irt$a >=.10 & all_item_irt$a<.34, na.rm=TRUE)
@@ -2302,9 +3281,131 @@ all_item_irt$Dif_categorization <- ifelse(all_item_irt$a >=.10 & all_item_irt$a<
                                                                       ifelse(all_item_irt$a >=1.69, "Very High", NA)))))
 ```
 
+
+```{r bigf2xs-s, eval=FALSE, include=FALSE}
+big_five_2_s <- bigfive %>% 
+  dplyr::select(RBF16, BF46, BF21, RBF36, BF41, RBF11,
+                RBF17, BF32, BF52, RBF22, RBF12, BF57,
+                BF33, RBF3,RBF23, BF38, RBF58, BF43,
+                BF34, RBF4, BF39, RBF24, RBF29, BF59,
+                RBF25, BF10, BF20,RBF50,RBF30, BF15 )
+
+big_five_2_xs <- bigfive %>% 
+  dplyr::select(RBF16,  BF21,  BF41, 
+                RBF17, BF52,RBF12, 
+                BF33, RBF23,  RBF58,
+                BF34, BF39,  RBF29, 
+                RBF25,  BF20,RBF30  )
+
+
+
+extroversion_rel_data_s <- big_five_2_s  %>% dplyr::select(RBF16, BF46, BF21, RBF36, BF41, RBF11)
+
+agreebleness_rel_data_s <-   big_five_2_s  %>% dplyr::select(RBF17, BF32, BF52, RBF22, RBF12, BF57)
+
+conscientiousness_rel_data_s<-  big_five_2_s  %>% dplyr::select(BF33, RBF3,RBF23, BF38, RBF58, BF43)
+
+negative_emotionality_rel_data_s<-   big_five_2_s  %>% dplyr::select(BF34, RBF4, BF39, RBF24, RBF29, BF59)
+
+open_mind_rel_data_s <-   big_five_2_s  %>% dplyr::select(RBF25, BF10, BF20,RBF50,RBF30, BF15)
+
+extroversion_rel_data_xs <- big_five_2_s  %>% dplyr::select(RBF16,  BF21,  BF41)
+
+agreebleness_rel_data_xs <-   big_five_2_s  %>% dplyr::select(RBF17, BF52,RBF12)
+
+conscientiousness_rel_data_xs<-  big_five_2_s  %>% dplyr::select(BF33, RBF23,  RBF58)
+
+negative_emotionality_rel_data_xs<-   big_five_2_s  %>% dplyr::select(BF34, BF39,  RBF29)
+
+open_mind_rel_data_xs <-   big_five_2_s  %>% dplyr::select(RBF25,  BF20,RBF30)
+
+
+
+
+#S
+extroversion_alpha_s <- coefficientalpha::alpha(extroversion_rel_data_s)
+
+agreebleness_alpha_s <- coefficientalpha::alpha(agreebleness_rel_data_s)
+
+conscientiousness_alpha_s <- coefficientalpha::alpha(conscientiousness_rel_data_s)
+
+negative_emotionality_alpha_s <- coefficientalpha::alpha(negative_emotionality_rel_data_s)
+
+open_mind_alpha_s <- coefficientalpha::alpha(open_mind_rel_data_s)
+
+
+
+extroversion_alpha_ordinal_s <- psych::alpha(polychoric(extroversion_rel_data_s)$rho)
+
+agreebleness_alpha_ordinal_s <- psych::alpha(polychoric(agreebleness_rel_data_s)$rho)
+
+conscientiousness_alpha_ordinal_s <- psych::alpha(polychoric(conscientiousness_rel_data_s)$rho)
+
+negative_emotionality_alpha_ordinal_s <- psych::alpha(polychoric(negative_emotionality_rel_data_s)$rho)
+
+open_mind_alpha_ordinal_s <- psych::alpha(polychoric(open_mind_rel_data_s)$rho)
+
+
+
+extroversion_omega_s <- coefficientalpha::omega(extroversion_rel_data_s)
+
+agreebleness_omega_s <- coefficientalpha::omega(agreebleness_rel_data_s)
+
+conscientiousness_omega_s <- coefficientalpha::omega(conscientiousness_rel_data_s)
+
+negative_emotionality_omega_s <- coefficientalpha::omega(negative_emotionality_rel_data_s)
+
+open_mind_alpha_omega_s <- coefficientalpha::omega(open_mind_rel_data_s)
+
+
+
+#XS
+
+extroversion_alpha_xs <- coefficientalpha::alpha(extroversion_rel_data_xs)
+
+agreebleness_alpha_xs <- coefficientalpha::alpha(agreebleness_rel_data_xs)
+
+conscientiousness_alpha_xs <- coefficientalpha::alpha(conscientiousness_rel_data_xs)
+
+negative_emotionality_alpha_xs <- coefficientalpha::alpha(negative_emotionality_rel_data_xs)
+
+open_mind_alpha_xs <- coefficientalpha::alpha(open_mind_rel_data_xs)
+
+
+extroversion_alpha_ordinal_xs <- psych::alpha(polychoric(extroversion_rel_data_xs)$rho)
+
+agreebleness_alpha_ordinal_xs <- psych::alpha(polychoric(agreebleness_rel_data_xs)$rho)
+
+conscientiousness_alpha_ordinal_xs <- psych::alpha(polychoric(conscientiousness_rel_data_xs)$rho)
+
+negative_emotionality_alpha_ordinal_xs <- psych::alpha(polychoric(negative_emotionality_rel_data_xs)$rho)
+
+open_mind_alpha_ordinal_xs <- psych::alpha(polychoric(open_mind_rel_data_xs)$rho)
+
+
+
+# extroversion_omega_xs <- coefficientalpha::omega(extroversion_rel_data_xs)
+# 
+# agreebleness_omega_xs <- coefficientalpha::omega(agreebleness_rel_data_xs)
+# 
+# conscientiousness_omega_xs <- coefficientalpha::omega(conscientiousness_rel_data_xs)
+# 
+# negative_emotionality_omega_xs <- coefficientalpha::omega(negative_emotionality_rel_data_xs)
+# 
+# open_mind_alpha_omega_xs <- coefficientalpha::omega(open_mind_rel_data_xs)
+
+
+  
+```
+
+
+
+
+
 ```{r IRT-tab1, results='asis'}
 apa_table(all_item_irt,landscape = F, caption = "IRT Description")
 ```
+
 
 ```{r IRT-plots, eval=FALSE, include=FALSE}
 #Only for inspection
@@ -2349,6 +3450,306 @@ as.info_plot <- plot(as.fit, type = "infoSE", facet =T, main = "Aesthetic Sensit
 ci.info_plot <- plot(ci.fit, type = "infoSE", facet =T, main = "Creative Imagination")
 
 ```
+
+```{r Bigfive-domain-irt,eval=FALSE}
+#5 domain
+extroversion <- esem_data_2 %>% dplyr::select(BF1, BF46, RBF36, RBF51,BF6, BF11,BF41, BF56,RBF26)
+
+
+agreebleness <-  esem_data_2 %>% dplyr::select(BF2,RBF17,BF32,RBF47, BF7,RBF22,RBF37,BF52, RBF12,BF27,RBF42,BF57)
+
+conscientiousness<-  bigfive %>% dplyr::select(RBF3 , BF18 ,BF33 ,RBF48, RBF8 , RBF23, BF38 ,BF53, BF13,RBF28,BF43,RBF58)
+
+
+
+negative_emotionality<-  esem_data_2 %>% dplyr::select(RBF4 ,BF19 ,BF34 ,RBF49,RBF9,RBF24,BF39,BF54,BF14 ,RBF29 ,RBF44,BF59 )
+
+
+open_mind <-  esem_data_2 %>% dplyr::select(BF10,RBF25,BF40,RBF55, RBF5,BF20,BF35 , RBF50,BF15 ,RBF30 , RBF45  ,BF60)
+
+# monotonocity_extroversion <- mokken::check.monotonicity(extroversion )
+# monotonocity_extroversion_results <- monotonocity_extroversion$results
+# summary(monotonocity_extroversion)
+#Model fit
+extroversion_fit <- mirt(extroversion  , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+agreebleness_fit <- mirt(agreebleness , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+conscientiousness_fit <- mirt(conscientiousness , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+negative_emotionality_fit <- mirt(negative_emotionality , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+open_mind_fit <- mirt(open_mind, model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+
+
+# #M2
+# extroversion_m2 <- M2(extroversion_fit)
+# agreebleness_m2 <- M2(agreebleness_fit)
+# conscientiousness_m2 <- M2(conscientiousness_fit)
+# negative_emotionality_m2 <- M2(negative_emotionality_fit)
+# 
+# open_mind_m2 <- M2(open_mind_fit)
+
+# Model Parameters 
+
+##extroversion
+extroversion_params <- coef(extroversion_fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+extroversion_items <- data.frame(extroversion_params$items)
+
+##agreebleness
+agreebleness_params <- coef(agreebleness_fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+agreebleness_items <- data.frame(agreebleness_params$items)
+
+##conscientiousness
+conscientiousness_params <- coef(conscientiousness_fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+conscientiousness_items <- data.frame(conscientiousness_params$items)
+
+##negative_emotionality
+negative_emotionality_params <- coef(negative_emotionality_fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+negative_emotionality_items <- data.frame(negative_emotionality_params$items)
+
+##open_mind
+open_mind_params <- coef(open_mind_fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+open_mind_items <- data.frame(open_mind_params$items)
+
+
+
+# Item Fit
+
+#RMSEA >=.06
+extroversion_item_fit<- itemfit(extroversion_fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10)
+agreebleness_item_fit<- itemfit(agreebleness_fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10)
+conscientiousness_item_fit<- itemfit(conscientiousness_fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10)
+negative_emotionality_item_fit<- itemfit(negative_emotionality_fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10)
+open_mind_item_fit<- itemfit(open_mind_fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10)
+
+
+
+#Identifying Missfit items based on RMSEA Value
+extroversion_item_misfits <- subset(extroversion_item_fit, RMSEA.S_X2 >= .06)
+agreebleness_item_misfits <- subset(agreebleness_item_fit, RMSEA.S_X2 >= .06)
+conscientiousness_item_misfits <- subset(conscientiousness_item_fit, RMSEA.S_X2 >= .06)
+negative_emotionality_item_misfits <- subset(negative_emotionality_item_fit, RMSEA.S_X2 >= .06)
+open_mind_item_fit_misfits <- subset(open_mind_item_fit, RMSEA.S_X2 >= .06)
+
+
+
+
+#Only for inspection
+
+#Item Information curve
+extroversion_info_plot <- plot(extroversion_fit, type = "infotrace", facet =T, main = "Sociability")
+
+agreebleness_info_plot <- plot(agreebleness_fit, type = "infotrace", facet =T, main = "Assertiveness")
+
+conscientiousness_info_plot <- plot(conscientiousness_fit, type = "infotrace", facet =T, main = "Compassion")
+negative_emotionality_info_plot <- plot(negative_emotionality_fit, type = "infotrace", facet =T, main = "Respectfulness")
+
+open_mind_info_plot <- plot(open_mind_fit, type = "infotrace", facet =T, main = "Respectfulness")
+
+
+#Test Information curve
+extroversion_testinfo_plot <- plot(extroversion_fit, type = "infoSE", facet =T, main = "Sociability")
+
+agreebleness_testinfo_plot <- plot(agreebleness_fit, type = "infoSE", facet =T, main = "Assertiveness")
+
+conscientiousness_testinfo_plot <- plot(conscientiousness_fit, type = "infoSE", facet =T, main = "Compassion")
+negative_emotionality_testinfo_plot <- plot(negative_emotionality_fit, type = "infoSE", facet =T, main = "Respectfulness")
+
+open_mind_testinfo_plot <- plot(open_mind_fit, type = "infoSE", facet =T, main = "Respectfulness")
+
+
+#OCC
+extroversion_occ_plot <- plot(extroversion_fit, type = "trace", facet =T, main = "Sociability")
+
+agreebleness_occ_plot <- plot(agreebleness_fit, type = "trace", facet =T, main = "Assertiveness")
+conscientiousness_occ_plot <- plot(conscientiousness_fit, type = "trace", facet =T, main = "Compassion")
+negative_emotionality_occ_plot <- plot(negative_emotionality_fit, type = "trace", facet =T, main = "Respectfulness")
+
+open_mind_occ_plot <- plot(open_mind_fit, type = "trace", facet =T, main = "Respectfulness")
+
+
+#Reliability
+extroversion_rel_plot <- plot(extroversion_fit, type = "rxx", facet =T, main = "Sociability")
+
+agreebleness_rel_plot <- plot(agreebleness_fit, type = "rxx", facet =T, main = "Assertiveness")
+conscientiousness_rel_plot <- plot(conscientiousness_fit, type = "rxx", facet =T, main = "Compassion")
+negative_emotionality_rel_plot <- plot(negative_emotionality_fit, type = "rxx", facet =T, main = "Respectfulness")
+
+open_mind_rel_plot <- plot(open_mind_fit, type = "rxx", facet =T, main = "Respectfulness")
+```
+
+```{r equating, eval=FALSE}
+
+library(plink)
+library(ltm)
+
+
+dif_data <- cbind(descriptives$Gender, bigfive)
+
+dif_male <- dif_data %>% 
+  subset(descriptives$Gender=="Male")
+
+dif_female <- dif_data %>% 
+  subset(descriptives$Gender=="Female")
+
+dif_male_2 <- dif_male[,-1]
+dif_female_2 <- dif_female[,-1]
+
+
+extroversion_male <- dif_male_2 %>% dplyr::select(BF1, RBF16,BF46,RBF31, BF21, RBF36, RBF51,BF6, BF11,BF41, BF56,RBF26)
+
+
+agreebleness_male <-  dif_male_2 %>% dplyr::select(BF2,RBF17,BF32,RBF47, BF7,RBF22,RBF37,BF52, RBF12,BF27,RBF42,BF57)
+
+conscientiousness_male<-  dif_male_2 %>% dplyr::select(RBF3 , BF18 ,BF33 ,RBF48, RBF8 , RBF23, BF38 ,BF53, BF13,RBF28,BF43,RBF58)
+
+
+
+negative_emotionality_male<-  dif_male_2 %>% dplyr::select(RBF4 ,BF19 ,BF34 ,RBF49,RBF9,RBF24,BF39,BF54,BF14 ,RBF29 ,RBF44,BF59 )
+
+
+open_mind_male <-  dif_male_2 %>% dplyr::select(BF10,RBF25,BF40,RBF55, RBF5,BF20,BF35 , RBF50,BF15 ,RBF30 , RBF45  ,BF60)
+
+
+
+
+extroversion_female <- dif_female_2 %>% dplyr::select(BF1, RBF16,BF46,RBF31, BF21, RBF36, RBF51,BF6, BF11,BF41, BF56,RBF26)
+
+
+agreebleness_female <-  dif_female_2 %>% dplyr::select(BF2,RBF17,BF32,RBF47, BF7,RBF22,RBF37,BF52, RBF12,BF27,RBF42,BF57)
+
+conscientiousness_female<-  dif_female_2 %>% dplyr::select(RBF3 , BF18 ,BF33 ,RBF48, RBF8 , RBF23, BF38 ,BF53, BF13,RBF28,BF43,RBF58)
+
+
+
+negative_emotionality_female<-  dif_female_2 %>% dplyr::select(RBF4 ,BF19 ,BF34 ,RBF49,RBF9,RBF24,BF39,BF54,BF14 ,RBF29 ,RBF44,BF59 )
+
+
+open_mind_female <-  dif_female_2 %>% dplyr::select(BF10,RBF25,BF40,RBF55, RBF5,BF20,BF35 , RBF50,BF15 ,RBF30 , RBF45  ,BF60)
+
+
+
+
+common <- matrix(c(1:12, 1:12), 12, 2)  
+
+
+
+#Exrtroversion
+extroversion_male_ltm <- ltm::grm(extroversion_male , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+extroversion_female_ltm <- ltm::grm(extroversion_female , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+
+extroversion_male_plink <- plink::read.ltm(extroversion_male_ltm)
+extroversion_female_plink <- plink::read.ltm(extroversion_female_ltm)
+
+extroversion_combined_pars <- as.irt.pars(x = list(extroversion_male_plink@pars,extroversion_female_plink@pars), common = common, cat = list(extroversion_male_plink@cat, extroversion_female_plink@cat),  poly.mod = list(extroversion_male_plink@poly.mod, extroversion_female_plink@poly.mod))  
+extroversion_liked_out <- plink(combined_pars, rescale = "MS", base.grp = 1)  
+summary(extroversion_liked_out)  
+
+
+extroversion_male_equated <- as.data.frame(extroversion_liked_out$pars@pars$group1)
+extroversion_female_equated <- extroversion_liked_out$pars@pars$group2
+
+extroversion_male_equated$ 
+
+# agreebleness
+
+agreebleness_male_ltm <- ltm::grm(agreebleness_male , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+agreebleness_female_ltm <- ltm::grm(agreebleness_female , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+
+agreebleness_male_plink <- plink::read.ltm(agreebleness_male_ltm)
+agreebleness_female_plink <- plink::read.ltm(agreebleness_female_ltm)
+
+
+agreebleness_combined_pars <- as.irt.pars(x = list(agreebleness_male_plink@pars,agreebleness_female_plink@pars), common = common, cat = list(agreebleness_male_plink@cat, agreebleness_female_plink@cat),  poly.mod = list(agreebleness_male_plink@poly.mod, agreebleness_female_plink@poly.mod))  
+agreebleness_liked_out <- plink(combined_pars, rescale = "SL", base.grp = 1)  
+summary(agreebleness_liked_out)  
+
+
+# conscientiousness
+
+conscientiousness_male_ltm <- ltm::grm(conscientiousness_male , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+conscientiousness_female_ltm <- ltm::grm(conscientiousness_female , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+
+conscientiousness_male_plink <- plink::read.ltm(conscientiousness_male_ltm)
+conscientiousness_female_plink <- plink::read.ltm(conscientiousness_female_ltm)
+
+
+conscientiousness_combined_pars <- as.irt.pars(x = list(conscientiousness_male_plink@pars,conscientiousness_female_plink@pars), common = common, cat = list(conscientiousness_male_plink@cat, conscientiousness_female_plink@cat),  poly.mod = list(conscientiousness_male_plink@poly.mod, conscientiousness_female_plink@poly.mod))  
+conscientiousness_liked_out <- plink(combined_pars, rescale = "SL", base.grp = 1)  
+summary(conscientiousness_liked_out)
+
+
+#negative_emotionality
+negative_emotionality_male_ltm <- ltm::grm(negative_emotionality_male , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+negative_emotionality_female_ltm <- ltm::grm(negative_emotionality_female , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+
+negative_emotionality_male_plink <- plink::read.ltm(negative_emotionality_male_ltm)
+negative_emotionality_female_plink <- plink::read.ltm(negative_emotionality_female_ltm)
+
+
+negative_emotionality_combined_pars <- as.irt.pars(x = list(negative_emotionality_male_plink@pars,negative_emotionality_female_plink@pars), common = common, cat = list(negative_emotionality_male_plink@cat, negative_emotionality_female_plink@cat),  poly.mod = list(negative_emotionality_male_plink@poly.mod, negative_emotionality_female_plink@poly.mod))  
+negative_emotionality_liked_out <- plink(combined_pars, rescale = "SL", base.grp = 1)  
+summary(negative_emotionality_liked_out)
+
+
+#open_mind
+open_mind_male_ltm <- ltm::grm(open_mind_male , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+open_mind_female_ltm <- ltm::grm(open_mind_female , constrained = FALSE, IRT.param = TRUE, Hessian = FALSE)
+
+
+open_mind_male_plink <- plink::read.ltm(open_mind_male_ltm)
+open_mind_female_plink <- plink::read.ltm(open_mind_female_ltm)
+
+
+open_mind_combined_pars <- as.irt.pars(x = list(open_mind_male_plink@pars,open_mind_female_plink@pars), common = common, cat = list(open_mind_male_plink@cat, open_mind_female_plink@cat),  poly.mod = list(open_mind_male_plink@poly.mod, open_mind_female_plink@poly.mod))  
+open_mind_liked_out <- plink(combined_pars, rescale = "SL", base.grp = 1)  
+summary(open_mind_liked_out)
+
+```
+
+```{r dif,eval=FALSE}
+library(lordif)
+
+
+extroversion_dif <- lordif(as.data.frame(extroversion), descriptives$Gender, criterion = "Chisqr", alpha = 0.05)
+
+
+agreebleness_dif <- lordif(as.data.frame(agreebleness), descriptives$Gender,criterion = "Chisqr", alpha = 0.05)
+
+
+conscientiousness_dif <- lordif(as.data.frame(conscientiousness), descriptives$Gender,  criterion = "Chisqr", alpha = 0.05)
+
+
+negative_emotionality_dif <- lordif(as.data.frame(negative_emotionality), descriptives$Gender, criterion = "Chisqr", alpha = 0.05)
+
+open_mind_dif <- lordif(as.data.frame(open_mind), descriptives$Gender, criterion = "Chisqr", alpha = 0.05)
+
+adjusted_theta <- open_mind_dif$calib.sparse$theta
+
+
+```
+
 
 ```{r validity, include=F}
 
@@ -2505,72 +3906,6 @@ papaja::apa_table(domain_cor, escape  = FALSE
                 , caption = "Correlation matrix of the domains"
                 , note    = "**p < .001", landscape = T)
 ```
-
-
-
-## Material
-
-## Big Five 2
-
-## Bangla Big Five 2
-
-## Depression Scale
-
-## Guilt and Shame Pronness
-
-
-## EPRQ
-
-## Procedure
-
-## Data analysis
-We used `r cite_r("r-libs.bib")` for all our analyses.
-
-
-# Results
-```{r CFA}
-#Single Domain Model
-##Extraversion
-extra.singledomain.model <- ' extra=~ BF01 + BF06 + RBF11 + RBF16 + BF21 + RBF26 + RBF36 + BF41 +BF46 + RBF51 + BF56'
-extra.singledomain.model.fit <-cfa(extra.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
-
-extra.singledomain.model.sum <- lavaan::summary(extra.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
-
-
-##Agreeableness
-agre.singledomain.model <- 'Agr =~ BF02 + BF07 + RBF12 +RBF17 + RBF22 + BF27 + BF32 + RBF37 + RBF42 +  RBF47 + BF52 +BF57'
-agre.singledomain.model.fit <-cfa(agre.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
-
-agre.singledomain.model.sum <- lavaan::summary(agre.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
-
-##Consentiousness
-cons.singledomain.model <- 'Cons =~ RBF03 + RBF08 + BF13 + BF18 + RBF23 + RBF28 + BF33 + BF38 + BF43  + RBF48 +BF53 +RBF58
-'
-cons.singledomain.model.fit <-cfa(cons.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
-
-cons.singledomain.model.sum <- lavaan::summary(cons.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
-
-##Neuroticism
-ne.singledomain.model <- 'NE =~ RBF04 + RBF09 + BF14 + BF19 + RBF24 + RBF29 + BF34 + BF39 +RBF44 +RBF49 +BF54 + BF59'
-ne.singledomain.model.fit <-cfa(ne.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
-
-ne.singledomain.model.sum <- lavaan::summary(ne.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
-
-
-##Open-mindedness
-om.singledomain.model <- 'OM =~ RBF05 + BF10 +BF15 +BF20 + RBF25 +RBF30 + BF35 +BF40 + RBF45 + RBF50 +RBF55 +BF60'
-
-om.singledomain.model.fit <-cfa(om.singledomain.model, data = bigfive,ordered = names(bigfive),  estimator = "WLSMV", mimic = "Mplus")
-
-om.singledomain.model.sum <- lavaan::summary(om.singledomain.model.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
-
-```
-
-
-```{r single-domain-with-acc, include =F}
-
-```
-
 
 
 # Discussion
