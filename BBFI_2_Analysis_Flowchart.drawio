@@ -1,1 +1,70 @@
-<mxfile host="Electron" modified="2023-01-29T12:10:40.338Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/20.8.10 Chrome/106.0.5249.199 Electron/21.3.5 Safari/537.36" etag="i5Otl3G31TH7ny6HArVv" version="20.8.10" type="device"><diagram id="GV2G-HkZ73GYifROroEB" name="Page-1">7VpNc6M4EP01PiYFCAM+ju0ks1OVqt1kdue4JYMAbUBiJJHY+fXb4sM2SJlkN/44JD7YopEa6b0nqVt4ghbl+kbgKr/lCSkmnpOsJ2g58TzXRz78aMumtYThrDVkgiZdpZ3hnj6Tzuh01pomRA4qKs4LRauhMeaMkVgNbFgI/jSslvJi+NQKZ8Qw3Me4MK0/aKLy1hp54c7+ldAs75/sBt34StxX7kYic5zwpz0TupqgheBctaVyvSCFBq/HpW13/cLdbccEYeotDa6fq8Xf3642d1fRP/m3rw93/vLmonfziIu6G3HXW7XpIXjKqSL3FY719RPQPEHzXJUFXLlQTDlTC15w0dRG180H7Gb/+mcRoch6z9T194bwkiixgSrd3aCDrtOOGwTt9dOOiaAXSr7HQtgbccd+tnW9AwgKHUb/AS8Tru8CM1lgRVmmtZkT+EazC4Cs1DA2SvKCAno2XwkoZbr0RUoiZdsElKs0RI1XmlC1MRgQvGYJSTrAX+ODFsUeHwkmURqDXSrBH8jenSCOyCo9DFOuM6Jq5hhUeaGFquhYTHkGU0siY0ErRR81R5jhYiOpPCzYUxIlvg3syFshkO9RwEbO7MxgIwPsPxlIuSRMUg5AN6IeT4Lf2imSUvXivYRqykrKYH5xZqnGZAWrfjuReNVWcuIcCxwrIqhUNJbaUotH2EU8GF2AS80hW8mqYWPsspu4lKVclLj32LUfV/6dCNlUsA7iO5HK7uolT/2yUYLOXu3pLRYZIKPJuSMFxSva4gzSTuBbDGxVwdVhtb5ykyR1bFp3nRDNyHG07qM3LixueCyx+4bYx/D3K8uYsQVnKdVS4M0QUxApYParFldrIE70De6VqGNVC71+kZ91L6lSR120mQSH5NchiAQ2fh0SOVF0HH4D/9wbx9SgF3ZrHtMGbdn0DDoGyw3s9Zq8kmAJlBx4cuE4SpANfA/5/jQ5DvhhcG7ww9fD0T3QtiG1XoYSLPMGbX0BW07GoBwDOMASmmtQKARjX7obJU0S7VH7qLTncp3pDOayTRq89le71dg4l0Goyxo3T/tnXMV5/6xmD4KLlK51B+aCq3ZqouXMOQxTnhtd9qlUR9aWhD2yELpEyKTLOxZd0Sddb6XLd85P1+yTrrfStc0rz0hX34VPvl7nK7TEhSfn6wCHKedI3tFsGAZsEdrD0rdEAehoQJrJ+3uBPEliPgYSWUR5WiDNxPydQJ4m6xsDObWsxqcF0kz63gvkSdKrMZBBeG4gzfTqvUCeJFUaAxlaDjhPC2RgALkkj6TgVdmeJvMUvuaYZQU2zxV6S0IfB9gHP2ve3d+VBi1khZm1CfDwkDU570XccvBFj4FRRXFhdXndnsReA9G6w7eUJWldMCJ1lv1HTaQOGximYnteBki1zx/2CczNQHrrSE9AsRpKqA+ICpKqX4VDkNbTZ7xqHOlFr+KUqYbJ6XwyXWpPteKyfWvlGhpknJGRYDvTARTp+6Ndu59a+8m7Z5GkfzRJmtn7G8/cPwZDtnDARSddNMyEvTtpBxwrzqRmSeWkPW5cYQkR/Esn5B+czKljTjfXdlZ2vOlmpvO29wD9oXHzouCvl14xfgzSbOHP9lXlSWZgvyDvkbbgLK6FaHftD06QLaxybZvY/yAILnf/tmju7f1nBV39Cw==</diagram></mxfile>
+<mxfile host="Electron" modified="2024-02-26T14:47:44.241Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.2 Chrome/114.0.5735.289 Electron/25.9.4 Safari/537.36" etag="ZpLdnwPOuZT6iujHJwBI" version="22.1.2" type="device">
+  <diagram id="GV2G-HkZ73GYifROroEB" name="Page-1">
+    <mxGraphModel dx="954" dy="594" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-21" value="" style="whiteSpace=wrap;html=1;fontColor=#FFFFFF;" parent="1" vertex="1">
+          <mxGeometry x="60" y="166" width="610" height="710" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-1" value="Descriptives&lt;br&gt;Reliability Estimates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="100" y="190" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-2" value="Domain Level: ESEM&lt;br&gt;Facet Level: Comparing Five Different Models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="100" y="309" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-3" value="13-model Taxonomy&lt;br&gt;Male vs Female&lt;br&gt;Education Level&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;span style=&quot;&quot;&gt;Bangla vs English&lt;br&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
+          <mxGeometry x="100" y="430" width="270" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-4" value="&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Item fit&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Item difficulty &amp;amp; Discrimination&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Person fit&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Test information curve&amp;nbsp;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Marginal Reliability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
+          <mxGeometry x="100" y="568" width="270" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-5" value="Associations between scores of BFI-2 and NEO-FFI-B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" parent="1" vertex="1">
+          <mxGeometry x="100" y="728" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-7" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.67;dx=20;notch=0;aspect=fixed;rotation=90;" parent="1" vertex="1">
+          <mxGeometry x="218.34" y="280" width="33.33" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-8" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.67;dx=20;notch=0;aspect=fixed;rotation=90;" parent="1" vertex="1">
+          <mxGeometry x="218.34" y="400" width="33.33" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-9" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.67;dx=20;notch=0;aspect=fixed;rotation=90;" parent="1" vertex="1">
+          <mxGeometry x="218.34" y="538" width="33.33" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-10" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.67;dx=20;notch=0;aspect=fixed;rotation=90;" parent="1" vertex="1">
+          <mxGeometry x="218.34" y="698" width="33.33" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-11" value="" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="390" y="220" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-12" value="" style="whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="390" y="330" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-13" value="" style="whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
+          <mxGeometry x="390" y="465" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-14" value="" style="whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
+          <mxGeometry x="390" y="608" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-15" value="" style="whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" parent="1" vertex="1">
+          <mxGeometry x="390" y="753" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-17" value="Structural Validity" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="440" y="330" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-18" value="&lt;div style=&quot;text-align: center;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;Measurement Invariance&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="440" y="465" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-19" value="Item Response Theory" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="440" y="608" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-20" value="Convergent and Discriminant&amp;nbsp;&lt;br&gt;&amp;nbsp;Validity" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="440" y="748" width="180" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="44nrGvnH6JYXygiOvbQ--1" value="Descriptives and Reliability" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="440" y="220" width="170" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
