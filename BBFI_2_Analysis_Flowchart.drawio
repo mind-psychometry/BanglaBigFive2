@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2024-02-26T14:47:44.241Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.2 Chrome/114.0.5735.289 Electron/25.9.4 Safari/537.36" etag="ZpLdnwPOuZT6iujHJwBI" version="22.1.2" type="device">
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
   <diagram id="GV2G-HkZ73GYifROroEB" name="Page-1">
-    <mxGraphModel dx="954" dy="594" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="954" dy="587" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -13,13 +13,13 @@
         <mxCell id="FzpC_JEyRE8jhJHkR4DG-2" value="Domain Level: ESEM&lt;br&gt;Facet Level: Comparing Five Different Models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
           <mxGeometry x="100" y="309" width="270" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="FzpC_JEyRE8jhJHkR4DG-3" value="13-model Taxonomy&lt;br&gt;Male vs Female&lt;br&gt;Education Level&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;span style=&quot;&quot;&gt;Bangla vs English&lt;br&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-3" value="13-model Taxonomy&lt;br&gt;Male vs Female&lt;div&gt;Education Level&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;&lt;span style=&quot;&quot;&gt;Bangla vs English&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#10739e;" parent="1" vertex="1">
           <mxGeometry x="100" y="430" width="270" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="FzpC_JEyRE8jhJHkR4DG-4" value="&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Item fit&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Item difficulty &amp;amp; Discrimination&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Person fit&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Test information curve&amp;nbsp;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Marginal Reliability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-4" value="&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Item Fit&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Item Difficulty &amp;amp; Discrimination&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Person Fit&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Test information curve&amp;nbsp;&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;Marginal Reliability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
           <mxGeometry x="100" y="568" width="270" height="120" as="geometry" />
         </mxCell>
-        <mxCell id="FzpC_JEyRE8jhJHkR4DG-5" value="Associations between scores of BFI-2 and NEO-FFI-B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" parent="1" vertex="1">
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-5" value="Associations Between Scores of BFI-2-B &amp;amp;&amp;nbsp;&lt;div&gt;NEO-FFI&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" parent="1" vertex="1">
           <mxGeometry x="100" y="728" width="270" height="80" as="geometry" />
         </mxCell>
         <mxCell id="FzpC_JEyRE8jhJHkR4DG-7" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.67;dx=20;notch=0;aspect=fixed;rotation=90;" parent="1" vertex="1">
@@ -58,7 +58,7 @@
         <mxCell id="FzpC_JEyRE8jhJHkR4DG-19" value="Item Response Theory" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="440" y="608" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="FzpC_JEyRE8jhJHkR4DG-20" value="Convergent and Discriminant&amp;nbsp;&lt;br&gt;&amp;nbsp;Validity" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+        <mxCell id="FzpC_JEyRE8jhJHkR4DG-20" value="Convergent and Discriminant&amp;nbsp;&lt;div&gt;Validity&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="440" y="748" width="180" height="40" as="geometry" />
         </mxCell>
         <mxCell id="44nrGvnH6JYXygiOvbQ--1" value="Descriptives and Reliability" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">

@@ -1,0 +1,3622 @@
+---
+title             : "The Bangla Big Five Inventory-2: A Comprehensive Psychmetric Validation using Classical Test Theory and Item Response Theory "
+shorttitle        : "BFI-2"
+
+author: 
+  - name          : "Mushfiqul Anwar Siraji"
+    affiliation   : "1"
+    role:         
+      - "Conceptualization"
+      - "Writing - Original Draft Preparation"
+      - "Writing - Review & Editing"
+    
+  - name          : "Fahria Karim"
+    affiliation   : "1"
+    role:
+      - "Writing - Original Draft Preparation"
+      - "Writing - Review & Editing"
+      
+  - name          : "Christopher J. Soto"
+    affiliation   : "2"
+    role:
+      - "Writing - Original Draft Preparation"
+      - "Writing - Review & Editing"
+
+
+  - name          : "Shamsul Haque"
+    affiliation   : "3"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Department of Psychology, Jeffrey Cheah School of Medicine and Health Sciences, Monash University Malaysia"
+    email         : "my@email.com"
+
+    role:
+      - "Writing - Review & Editing"
+
+
+affiliation:
+  - id            : "1"
+    institution   : "Department of History and Philosophy , North South University Bangladesh"
+  - id            : "2"
+    institution   : "Department of Psychology, Colby College USA"
+  - id            : "3"
+    institution   : "Department of Psychology, Jeffrey Cheah School of Medicine and Health Sciences, Monash University Malaysia"
+
+
+authornote: |
+  Add complete departmental affiliations for each author here. Each new line herein must be indented, like this line.
+
+  Enter author note here.
+
+abstract: |
+  The Big Five Inventory-2 (BFI-2), which categorizes personality traits into five independent bipolar dimensions, has become a popular psychometric tool for measuring personality. This manuscript aims to preregister the validation analysis of the Bangla BFI-2 among Bangladeshi community samples. A large-scale online survey will be conducted to collect data from at least 600 participants. Participants will complete Bangla BFI-2 and NEO Five-Factor Inventory Bangla (NEO-FFI-B). Domain-level structural validity will be investigated using Exploratory Structural Equation Modeling, and facet-level structural validity will be examined using Confirmatory Factor Analysis. A full measurement invariance across gender, educational level, and language (Bangla vs English) will be investigated using 13 models.  Item quality will be analyzed using Item Response Theory. Convergent and discriminant validity will be assessed by correlations of the five domains measured using Bangla BFI-2 and NEO-FFI-B.  In conclusion, this manuscript proposes validating the BFI-2 among Bangladeshi community samples to facilitate researchers and mental health practitioners to measure personality accurately.  
+  
+keywords          : "keywords"
+wordcount         : "X"
+
+bibliography      : ["r-references.bib", "r-libs.bib"]
+
+floatsintext      : no
+linenumbers       : yes
+draft             : no
+mask              : no
+
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+
+classoption       : "man"
+output            : papaja::apa6_docx
+---
+
+```{r setup-chunk, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F, dpi=300)
+options(knitr.duplicate.label = "allow")
+set.seed(123)
+par(family = "Arial")
+
+```
+
+```{r pacman,  include=FALSE}
+#You need to run this chunk 1X in your system 
+#install.packages("pacman")#Run this if you don't have pacman installed.
+# renv::restore()
+pacman::p_load(MOTE, tidyverse, psych, lavaan,kableExtra,gt,gtsummary, mirt,likert,kutils,semPlot,semTable,dlookr,VIM,ggplot2,cowplot,questionr,magick, readxl)
+library(readxl)
+library(gtExtras)
+library(papaja)
+library(tabledown)
+library(semTools)
+papaja::r_refs("r-libs.bib")
+# renv::snapshot()
+
+#if you dont have LaTeX installed run the following lines
+#install.packages("tinytex")
+#tinytex::install_tinytex()
+```
+
+
+```{r samplesizeIRT, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, results='hide', width=60}
+
+#Simulation to estimate required sample size for IRT
+
+
+library(SimDesign)
+set.seed(222)
+m <-  4 # item number
+n <- c(100, 200, 300, 400, 500, 600) # sample size
+design <- as.data.frame(n)
+
+
+irtGenerate <- function(condition, fixed_objects = FALSE) {
+n <- condition$n
+
+a <- matrix(rlnorm(m,.2,.3))
+diffs <- t(apply(matrix(runif(m*4, .3, 1), m), 1, cumsum))
+diffs <- -(diffs - rowMeans(diffs))
+diffs<- diffs + rnorm(m)
+d <- diffs
+dat <- simdata(a, d, n, itemtype = 'graded')
+return(dat)
+}
+
+irtAnalyze <- function(condition, dat, fixed_objects = NULL) {
+mod <- mirt(dat, 1, itemtype = 'graded', verbose = FALSE)
+simpars <- coef(mod, simplify = TRUE, digits = Inf)$items
+irtpars <- c(a = simpars[,1], d = simpars[,2])
+return(irtpars)
+}
+
+irtSummarize <- function(condition, results,
+fixed_objects = NULL) {
+apop <- fixed_objects['alpha', ]
+dpop <- fixed_objects['d', ]
+simrmse <- RMSE(results, c(apop, dpop))
+out <- c(RMSE = simrmse)
+return(out)
+}
+
+
+simres <- runSimulation(design, replications = 100,
+parallel = TRUE, generate = irtGenerate,
+analyse = irtAnalyze, summarise = irtSummarize,
+packages = c('mirt'))
+simres
+
+
+colind <- grep(".a.", colnames(simres))
+sima <- as.data.frame(simres[, colind])
+nvec <- as.numeric(simres$n)
+
+meanRMSE <- rowMeans(sima)
+names(meanRMSE) <- n
+round(meanRMSE, 2) #1.34-1.36
+matplot(nvec, log(sima), type = "l", col = 1, lty = 1,
+ylab = "log(RMSE)", xlab = "sample size",
+main = "Graded Response Model", xaxt = "n")
+axis(1, at = nvec)
+```
+
+
+```{r data}
+#Load the data
+data <- read_excel("BFI_Data_final.xlsx")
+#Check for completeness and consent
+complete_data <- data %>% 
+  dplyr::filter(Progress==100 & Q1.2 != "No I don't want to participate")
+
+#Check for attention check
+data_full <- complete_data %>% 
+  dplyr::filter(Attention_01== "Agree" &  Attention_02== "Strongly Disagree" & Attention_03== "Agree" & Attention_04== "Neutral" )
+
+```
+
+
+```{r datawrangling, include =F}
+#Demographics
+
+demographics <- data_full %>% 
+  dplyr::select(Age:Social_Stance)
+
+colnames(demographics) <- c("Age","Gender","Religion", "Marital_Status","Profession", "Education", "SES")
+demographics$Gender <- factor(demographics$Gender)
+
+#BIGFive
+BigFive <- data_full %>% 
+  dplyr::select(BFI01:BFI60, -Attention_02, -Attention_01)
+
+
+#NEO-FFI
+NEOFFI <- data_full %>% 
+  dplyr::select(NEOFFI_01:NEOFFI_60, -Attention_03, -Attention_04)
+
+
+
+
+
+#Recoding the scals
+
+##BFI2
+
+recode_bigfive <- c("Strongly Disagree"=1,
+                 "Disagree" =2,
+                 "Neutral"  =3,
+                 "Agree" =4,
+                 "Strongly Agree"  = 5)
+
+recode_bigfive <-  mutate(BigFive, across(starts_with("BFI"), ~unname(recode_bigfive[.])))
+
+bigfive <- recode_bigfive
+
+##Reverse coding the items
+
+# Extraversion: 1, 6, 11R, 16R, 21, 26R, 31R, 36R, 41, 46, 51R, 56
+# Agreeableness: 2, 7, 12R, 17R, 22R, 27, 32, 37R, 42R, 47R, 52, 57
+# Conscientiousness: 3R, 8R, 13, 18, 23R, 28R, 33, 38, 43, 48R, 53, 58R
+# Negative Emotionality: 4R, 9R, 14, 19, 24R, 29R, 34, 39, 44R, 49R, 54, 59
+# Open-Mindedness: 5R, 10, 15, 20, 25R, 30R, 35, 40, 45R, 50R, 55R, 60
+
+
+## Recoding bigfive$BFI11 into bigfive$RBFI11
+bigfive$RBFI11 <- as.character(bigfive$BFI11)
+bigfive$RBFI11[bigfive$BFI11 == "1"] <- "5"
+bigfive$RBFI11[bigfive$BFI11 == "2"] <- "4"
+bigfive$RBFI11[bigfive$BFI11 == "3"] <- "3"
+bigfive$RBFI11[bigfive$BFI11 == "4"] <- "2"
+bigfive$RBFI11[bigfive$BFI11 == "5"] <- "1"
+bigfive$RBFI11 <- as.numeric(bigfive$RBFI11)
+
+## Recoding bigfive$BFI16 into bigfive$RBFI16
+bigfive$RBFI16 <- as.character(bigfive$BFI16)
+bigfive$RBFI16[bigfive$BFI16 == "1"] <- "5"
+bigfive$RBFI16[bigfive$BFI16 == "2"] <- "4"
+bigfive$RBFI16[bigfive$BFI16 == "3"] <- "3"
+bigfive$RBFI16[bigfive$BFI16 == "4"] <- "2"
+bigfive$RBFI16[bigfive$BFI16 == "5"] <- "1"
+bigfive$RBFI16 <- as.numeric(bigfive$RBFI16)
+
+## Recoding bigfive$BFI26 into bigfive$RBFI26
+bigfive$RBFI26 <- as.character(bigfive$BFI26)
+bigfive$RBFI26[bigfive$BFI26 == "1"] <- "5"
+bigfive$RBFI26[bigfive$BFI26 == "2"] <- "4"
+bigfive$RBFI26[bigfive$BFI26 == "3"] <- "3"
+bigfive$RBFI26[bigfive$BFI26 == "4"] <- "2"
+bigfive$RBFI26[bigfive$BFI26 == "5"] <- "1"
+bigfive$RBFI26 <- as.numeric(bigfive$RBFI26)
+
+## Recoding bigfive$BFI31 into bigfive$RBFI31
+bigfive$RBFI31 <- as.character(bigfive$BFI31)
+bigfive$RBFI31[bigfive$BFI31 == "1"] <- "5"
+bigfive$RBFI31[bigfive$BFI31 == "2"] <- "4"
+bigfive$RBFI31[bigfive$BFI31 == "3"] <- "3"
+bigfive$RBFI31[bigfive$BFI31 == "4"] <- "2"
+bigfive$RBFI31[bigfive$BFI31 == "5"] <- "1"
+bigfive$RBFI31 <- as.numeric(bigfive$RBFI31)
+
+## Recoding bigfive$BFI36 into bigfive$RBFI36
+bigfive$RBFI36 <- as.character(bigfive$BFI36)
+bigfive$RBFI36[bigfive$BFI36 == "1"] <- "5"
+bigfive$RBFI36[bigfive$BFI36 == "2"] <- "4"
+bigfive$RBFI36[bigfive$BFI36 == "3"] <- "3"
+bigfive$RBFI36[bigfive$BFI36 == "4"] <- "2"
+bigfive$RBFI36[bigfive$BFI36 == "5"] <- "1"
+bigfive$RBFI36 <- as.numeric(bigfive$RBFI36)
+
+## Recoding bigfive$BFI51 into bigfive$RBFI51
+bigfive$RBFI51 <- as.character(bigfive$BFI51)
+bigfive$RBFI51[bigfive$BFI51 == "1"] <- "5"
+bigfive$RBFI51[bigfive$BFI51 == "2"] <- "4"
+bigfive$RBFI51[bigfive$BFI51 == "3"] <- "3"
+bigfive$RBFI51[bigfive$BFI51 == "4"] <- "2"
+bigfive$RBFI51[bigfive$BFI51 == "5"] <- "1"
+bigfive$RBFI51 <- as.numeric(bigfive$RBFI51)
+
+## Recoding bigfive$BFI12 into bigfive$RBFI12
+bigfive$RBFI12 <- as.character(bigfive$BFI12)
+bigfive$RBFI12[bigfive$BFI12 == "1"] <- "5"
+bigfive$RBFI12[bigfive$BFI12 == "2"] <- "4"
+bigfive$RBFI12[bigfive$BFI12 == "3"] <- "3"
+bigfive$RBFI12[bigfive$BFI12 == "4"] <- "2"
+bigfive$RBFI12[bigfive$BFI12 == "5"] <- "1"
+bigfive$RBFI12 <- as.numeric(bigfive$RBFI12)
+
+## Recoding bigfive$BFI17 into bigfive$RBFI17
+bigfive$RBFI17 <- as.character(bigfive$BFI17)
+bigfive$RBFI17[bigfive$BFI17 == "1"] <- "5"
+bigfive$RBFI17[bigfive$BFI17 == "2"] <- "4"
+bigfive$RBFI17[bigfive$BFI17 == "3"] <- "3"
+bigfive$RBFI17[bigfive$BFI17 == "4"] <- "2"
+bigfive$RBFI17[bigfive$BFI17 == "5"] <- "1"
+bigfive$RBFI17 <- as.numeric(bigfive$RBFI17)
+
+## Recoding bigfive$BFI22 into bigfive$RBFI22
+bigfive$RBFI22 <- as.character(bigfive$BFI22)
+bigfive$RBFI22[bigfive$BFI22 == "1"] <- "5"
+bigfive$RBFI22[bigfive$BFI22 == "2"] <- "4"
+bigfive$RBFI22[bigfive$BFI22 == "3"] <- "3"
+bigfive$RBFI22[bigfive$BFI22 == "4"] <- "2"
+bigfive$RBFI22[bigfive$BFI22 == "5"] <- "1"
+bigfive$RBFI22 <- as.numeric(bigfive$RBFI22)
+
+## Recoding bigfive$BFI37 into bigfive$RBFI37
+bigfive$RBFI37 <- as.character(bigfive$BFI37)
+bigfive$RBFI37[bigfive$BFI37 == "1"] <- "5"
+bigfive$RBFI37[bigfive$BFI37 == "2"] <- "4"
+bigfive$RBFI37[bigfive$BFI37 == "3"] <- "3"
+bigfive$RBFI37[bigfive$BFI37 == "4"] <- "2"
+bigfive$RBFI37[bigfive$BFI37 == "5"] <- "1"
+bigfive$RBFI37 <- as.numeric(bigfive$RBFI37)
+
+## Recoding bigfive$BFI42 into bigfive$RBFI42
+bigfive$RBFI42 <- as.character(bigfive$BFI42)
+bigfive$RBFI42[bigfive$BFI42 == "1"] <- "5"
+bigfive$RBFI42[bigfive$BFI42 == "2"] <- "4"
+bigfive$RBFI42[bigfive$BFI42 == "3"] <- "3"
+bigfive$RBFI42[bigfive$BFI42 == "4"] <- "2"
+bigfive$RBFI42[bigfive$BFI42 == "5"] <- "1"
+bigfive$RBFI42 <- as.numeric(bigfive$RBFI42)
+
+## Recoding bigfive$BFI47 into bigfive$RBFI47
+bigfive$RBFI47 <- as.character(bigfive$BFI47)
+bigfive$RBFI47[bigfive$BFI47 == "1"] <- "5"
+bigfive$RBFI47[bigfive$BFI47 == "2"] <- "4"
+bigfive$RBFI47[bigfive$BFI47 == "3"] <- "3"
+bigfive$RBFI47[bigfive$BFI47 == "4"] <- "2"
+bigfive$RBFI47[bigfive$BFI47 == "5"] <- "1"
+bigfive$RBFI47 <- as.numeric(bigfive$RBFI47)
+
+## Recoding bigfive$BFI03 into bigfive$RBFI03
+bigfive$RBFI03 <- as.character(bigfive$BFI03)
+bigfive$RBFI03[bigfive$BFI03 == "1"] <- "5"
+bigfive$RBFI03[bigfive$BFI03 == "2"] <- "4"
+bigfive$RBFI03[bigfive$BFI03 == "3"] <- "3"
+bigfive$RBFI03[bigfive$BFI03 == "4"] <- "2"
+bigfive$RBFI03[bigfive$BFI03 == "5"] <- "1"
+bigfive$RBFI03 <- as.numeric(bigfive$RBFI03)
+
+## Recoding bigfive$BFI08 into bigfive$RBFI08
+bigfive$RBFI08 <- as.character(bigfive$BFI08)
+bigfive$RBFI08[bigfive$BFI08 == "1"] <- "5"
+bigfive$RBFI08[bigfive$BFI08 == "2"] <- "4"
+bigfive$RBFI08[bigfive$BFI08 == "3"] <- "3"
+bigfive$RBFI08[bigfive$BFI08 == "4"] <- "2"
+bigfive$RBFI08[bigfive$BFI08 == "5"] <- "1"
+bigfive$RBFI08 <- as.numeric(bigfive$RBFI08)
+
+## Recoding bigfive$BFI23 into bigfive$RBFI23
+bigfive$RBFI23 <- as.character(bigfive$BFI23)
+bigfive$RBFI23[bigfive$BFI23 == "1"] <- "5"
+bigfive$RBFI23[bigfive$BFI23 == "2"] <- "4"
+bigfive$RBFI23[bigfive$BFI23 == "3"] <- "3"
+bigfive$RBFI23[bigfive$BFI23 == "4"] <- "2"
+bigfive$RBFI23[bigfive$BFI23 == "5"] <- "1"
+bigfive$RBFI23 <- as.numeric(bigfive$RBFI23)
+
+## Recoding bigfive$BFI28 into bigfive$RBFI28
+bigfive$RBFI28 <- as.character(bigfive$BFI28)
+bigfive$RBFI28[bigfive$BFI28 == "1"] <- "5"
+bigfive$RBFI28[bigfive$BFI28 == "2"] <- "4"
+bigfive$RBFI28[bigfive$BFI28 == "3"] <- "3"
+bigfive$RBFI28[bigfive$BFI28 == "4"] <- "2"
+bigfive$RBFI28[bigfive$BFI28 == "5"] <- "1"
+bigfive$RBFI28 <- as.numeric(bigfive$RBFI28)
+
+## Recoding bigfive$BFI48 into bigfive$RBFI48
+bigfive$RBFI48 <- as.character(bigfive$BFI48)
+bigfive$RBFI48[bigfive$BFI48 == "1"] <- "5"
+bigfive$RBFI48[bigfive$BFI48 == "2"] <- "4"
+bigfive$RBFI48[bigfive$BFI48 == "3"] <- "3"
+bigfive$RBFI48[bigfive$BFI48 == "4"] <- "2"
+bigfive$RBFI48[bigfive$BFI48 == "5"] <- "1"
+bigfive$RBFI48 <- as.numeric(bigfive$RBFI48)
+
+## Recoding bigfive$BFI58 into bigfive$RBFI58
+bigfive$RBFI58 <- as.character(bigfive$BFI58)
+bigfive$RBFI58[bigfive$BFI58 == "1"] <- "5"
+bigfive$RBFI58[bigfive$BFI58 == "2"] <- "4"
+bigfive$RBFI58[bigfive$BFI58 == "3"] <- "3"
+bigfive$RBFI58[bigfive$BFI58 == "4"] <- "2"
+bigfive$RBFI58[bigfive$BFI58 == "5"] <- "1"
+bigfive$RBFI58 <- as.numeric(bigfive$RBFI58)
+
+## Recoding bigfive$BFI04 into bigfive$RBFI04
+bigfive$RBFI04 <- as.character(bigfive$BFI04)
+bigfive$RBFI04[bigfive$BFI04 == "1"] <- "5"
+bigfive$RBFI04[bigfive$BFI04 == "2"] <- "4"
+bigfive$RBFI04[bigfive$BFI04 == "3"] <- "3"
+bigfive$RBFI04[bigfive$BFI04 == "4"] <- "2"
+bigfive$RBFI04[bigfive$BFI04 == "5"] <- "1"
+bigfive$RBFI04 <- as.numeric(bigfive$RBFI04)
+
+
+## Recoding bigfive$BFI09 into bigfive$RBFI09
+bigfive$RBFI09 <- as.character(bigfive$BFI09)
+bigfive$RBFI09[bigfive$BFI09 == "1"] <- "5"
+bigfive$RBFI09[bigfive$BFI09 == "2"] <- "4"
+bigfive$RBFI09[bigfive$BFI09 == "3"] <- "3"
+bigfive$RBFI09[bigfive$BFI09 == "4"] <- "2"
+bigfive$RBFI09[bigfive$BFI09 == "5"] <- "1"
+bigfive$RBFI09 <- as.numeric(bigfive$RBFI09)
+
+## Recoding bigfive$BFI24 into bigfive$RBFI24
+bigfive$RBFI24 <- as.character(bigfive$BFI24)
+bigfive$RBFI24[bigfive$BFI24 == "1"] <- "5"
+bigfive$RBFI24[bigfive$BFI24 == "2"] <- "4"
+bigfive$RBFI24[bigfive$BFI24 == "3"] <- "3"
+bigfive$RBFI24[bigfive$BFI24 == "4"] <- "2"
+bigfive$RBFI24[bigfive$BFI24 == "5"] <- "1"
+bigfive$RBFI24 <- as.numeric(bigfive$RBFI24)
+
+## Recoding bigfive$BFI29 into bigfive$RBFI29
+bigfive$RBFI29 <- as.character(bigfive$BFI29)
+bigfive$RBFI29[bigfive$BFI29 == "1"] <- "5"
+bigfive$RBFI29[bigfive$BFI29 == "2"] <- "4"
+bigfive$RBFI29[bigfive$BFI29 == "3"] <- "3"
+bigfive$RBFI29[bigfive$BFI29 == "4"] <- "2"
+bigfive$RBFI29[bigfive$BFI29 == "5"] <- "1"
+bigfive$RBFI29 <- as.numeric(bigfive$RBFI29)
+
+## Recoding bigfive$BFI44 into bigfive$RBFI44
+bigfive$RBFI44 <- as.character(bigfive$BFI44)
+bigfive$RBFI44[bigfive$BFI44 == "1"] <- "5"
+bigfive$RBFI44[bigfive$BFI44 == "2"] <- "4"
+bigfive$RBFI44[bigfive$BFI44 == "3"] <- "3"
+bigfive$RBFI44[bigfive$BFI44 == "4"] <- "2"
+bigfive$RBFI44[bigfive$BFI44 == "5"] <- "1"
+bigfive$RBFI44 <- as.numeric(bigfive$RBFI44)
+
+## Recoding bigfive$BFI49 into bigfive$RBFI49
+bigfive$RBFI49 <- as.character(bigfive$BFI49)
+bigfive$RBFI49[bigfive$BFI49 == "1"] <- "5"
+bigfive$RBFI49[bigfive$BFI49 == "2"] <- "4"
+bigfive$RBFI49[bigfive$BFI49 == "3"] <- "3"
+bigfive$RBFI49[bigfive$BFI49 == "4"] <- "2"
+bigfive$RBFI49[bigfive$BFI49 == "5"] <- "1"
+bigfive$RBFI49 <- as.numeric(bigfive$RBFI49)
+
+## Recoding bigfive$BFI05 into bigfive$RBFI05
+bigfive$RBFI05 <- as.character(bigfive$BFI05)
+bigfive$RBFI05[bigfive$BFI05 == "1"] <- "5"
+bigfive$RBFI05[bigfive$BFI05 == "2"] <- "4"
+bigfive$RBFI05[bigfive$BFI05 == "3"] <- "3"
+bigfive$RBFI05[bigfive$BFI05 == "4"] <- "2"
+bigfive$RBFI05[bigfive$BFI05 == "5"] <- "1"
+bigfive$RBFI05 <- as.numeric(bigfive$RBFI05)
+
+## Recoding bigfive$BFI25 into bigfive$RBFI25
+bigfive$RBFI25 <- as.character(bigfive$BFI25)
+bigfive$RBFI25[bigfive$BFI25 == "1"] <- "5"
+bigfive$RBFI25[bigfive$BFI25 == "2"] <- "4"
+bigfive$RBFI25[bigfive$BFI25 == "3"] <- "3"
+bigfive$RBFI25[bigfive$BFI25 == "4"] <- "2"
+bigfive$RBFI25[bigfive$BFI25 == "5"] <- "1"
+bigfive$RBFI25 <- as.numeric(bigfive$RBFI25)
+
+## Recoding bigfive$BFI30 into bigfive$RBFI30
+bigfive$RBFI30 <- as.character(bigfive$BFI30)
+bigfive$RBFI30[bigfive$BFI30 == "1"] <- "5"
+bigfive$RBFI30[bigfive$BFI30 == "2"] <- "4"
+bigfive$RBFI30[bigfive$BFI30 == "3"] <- "3"
+bigfive$RBFI30[bigfive$BFI30 == "4"] <- "2"
+bigfive$RBFI30[bigfive$BFI30 == "5"] <- "1"
+bigfive$RBFI30 <- as.numeric(bigfive$RBFI30)
+
+## Recoding bigfive$BFI45 into bigfive$RBFI45
+bigfive$RBFI45 <- as.character(bigfive$BFI45)
+bigfive$RBFI45[bigfive$BFI45 == "1"] <- "5"
+bigfive$RBFI45[bigfive$BFI45 == "2"] <- "4"
+bigfive$RBFI45[bigfive$BFI45 == "3"] <- "3"
+bigfive$RBFI45[bigfive$BFI45 == "4"] <- "2"
+bigfive$RBFI45[bigfive$BFI45 == "5"] <- "1"
+bigfive$RBFI45 <- as.numeric(bigfive$RBFI45)
+
+## Recoding bigfive$BFI50 into bigfive$RBFI50
+bigfive$RBFI50 <- as.character(bigfive$BFI50)
+bigfive$RBFI50[bigfive$BFI50 == "1"] <- "5"
+bigfive$RBFI50[bigfive$BFI50 == "2"] <- "4"
+bigfive$RBFI50[bigfive$BFI50 == "3"] <- "3"
+bigfive$RBFI50[bigfive$BFI50 == "4"] <- "2"
+bigfive$RBFI50[bigfive$BFI50 == "5"] <- "1"
+bigfive$RBFI50 <- as.numeric(bigfive$RBFI50)
+
+## Recoding bigfive$BFI55 into bigfive$RBFI55
+bigfive$RBFI55 <- as.character(bigfive$BFI55)
+bigfive$RBFI55[bigfive$BFI55 == "1"] <- "5"
+bigfive$RBFI55[bigfive$BFI55 == "2"] <- "4"
+bigfive$RBFI55[bigfive$BFI55 == "3"] <- "3"
+bigfive$RBFI55[bigfive$BFI55 == "4"] <- "2"
+bigfive$RBFI55[bigfive$BFI55 == "5"] <- "1"
+bigfive$RBFI55 <- as.numeric(bigfive$RBFI55)
+
+
+
+
+
+##NE0-FFI
+
+recode_neoffi <- c("Strongly Disagree"=1,
+                 "Disagree" =2,
+                 "Neutral"  =3,
+                 "Agree" =4,
+                 "Strongly Agree"  = 5)
+
+recode_neoffi <-  mutate(NEOFFI, across(starts_with("NEOFFI"), ~unname(recode_neoffi[.])))
+
+neo_ffi <- recode_neoffi
+
+#Reverse Coding
+# Extraversion: 2, 7, 12R, 17, 22, 27R, 32, 37, 42R, 47, 52, 57R
+# Agreeableness: 4, 9R, 14R, 19, 24R, 29R, 34, 39R, 44R, 49, 54R, 59R
+# Conscientiousness: 5, 10, 15R, 20, 25, 30R, 35, 40, 45R, 50, 55R, 60
+# Neuroticism: 1R, 6, 11, 16R, 21, 26, 31R, 36, 41, 46R, 51, 56
+# Openness to Experience: 3R, 8R, 13, 18R, 23R, 28, 33R, 38R, 43, 48R, 53, 58
+
+## Recoding neo_ffi$NEOFFI_12 into neo_ffi$RNEOFFI_12
+neo_ffi$RNEOFFI_12 <- as.character(neo_ffi$NEOFFI_12)
+neo_ffi$RNEOFFI_12[neo_ffi$NEOFFI_12 == "1"] <- "5"
+neo_ffi$RNEOFFI_12[neo_ffi$NEOFFI_12 == "2"] <- "4"
+neo_ffi$RNEOFFI_12[neo_ffi$NEOFFI_12 == "3"] <- "3"
+neo_ffi$RNEOFFI_12[neo_ffi$NEOFFI_12 == "4"] <- "2"
+neo_ffi$RNEOFFI_12[neo_ffi$NEOFFI_12 == "5"] <- "1"
+neo_ffi$RNEOFFI_12 <- as.numeric(neo_ffi$RNEOFFI_12)
+
+## Recoding neo_ffi$NEOFFI_27 into neo_ffi$RNEOFFI_27
+neo_ffi$RNEOFFI_27 <- as.character(neo_ffi$NEOFFI_27)
+neo_ffi$RNEOFFI_27[neo_ffi$NEOFFI_27 == "1"] <- "5"
+neo_ffi$RNEOFFI_27[neo_ffi$NEOFFI_27 == "2"] <- "4"
+neo_ffi$RNEOFFI_27[neo_ffi$NEOFFI_27 == "3"] <- "3"
+neo_ffi$RNEOFFI_27[neo_ffi$NEOFFI_27 == "4"] <- "2"
+neo_ffi$RNEOFFI_27[neo_ffi$NEOFFI_27 == "5"] <- "1"
+neo_ffi$RNEOFFI_27 <- as.numeric(neo_ffi$RNEOFFI_27)
+
+## Recoding neo_ffi$NEOFFI_42 into neo_ffi$RNEOFFI_42
+neo_ffi$RNEOFFI_42 <- as.character(neo_ffi$NEOFFI_42)
+neo_ffi$RNEOFFI_42[neo_ffi$NEOFFI_42 == "1"] <- "5"
+neo_ffi$RNEOFFI_42[neo_ffi$NEOFFI_42 == "2"] <- "4"
+neo_ffi$RNEOFFI_42[neo_ffi$NEOFFI_42 == "3"] <- "3"
+neo_ffi$RNEOFFI_42[neo_ffi$NEOFFI_42 == "4"] <- "2"
+neo_ffi$RNEOFFI_42[neo_ffi$NEOFFI_42 == "5"] <- "1"
+neo_ffi$RNEOFFI_42 <- as.numeric(neo_ffi$RNEOFFI_42)
+
+## Recoding neo_ffi$NEOFFI_57 into neo_ffi$RNEOFFI_57
+neo_ffi$RNEOFFI_57 <- as.character(neo_ffi$NEOFFI_57)
+neo_ffi$RNEOFFI_57[neo_ffi$NEOFFI_57 == "1"] <- "5"
+neo_ffi$RNEOFFI_57[neo_ffi$NEOFFI_57 == "2"] <- "4"
+neo_ffi$RNEOFFI_57[neo_ffi$NEOFFI_57 == "3"] <- "3"
+neo_ffi$RNEOFFI_57[neo_ffi$NEOFFI_57 == "4"] <- "2"
+neo_ffi$RNEOFFI_57[neo_ffi$NEOFFI_57 == "5"] <- "1"
+neo_ffi$RNEOFFI_57 <- as.numeric(neo_ffi$RNEOFFI_57)
+
+## Recoding neo_ffi$NEOFFI_09 into neo_ffi$RNEOFFI_09
+neo_ffi$RNEOFFI_09 <- as.character(neo_ffi$NEOFFI_09)
+neo_ffi$RNEOFFI_09[neo_ffi$NEOFFI_09 == "1"] <- "5"
+neo_ffi$RNEOFFI_09[neo_ffi$NEOFFI_09 == "2"] <- "4"
+neo_ffi$RNEOFFI_09[neo_ffi$NEOFFI_09 == "3"] <- "3"
+neo_ffi$RNEOFFI_09[neo_ffi$NEOFFI_09 == "4"] <- "2"
+neo_ffi$RNEOFFI_09[neo_ffi$NEOFFI_09 == "5"] <- "1"
+neo_ffi$RNEOFFI_09 <- as.numeric(neo_ffi$RNEOFFI_09)
+
+## Recoding neo_ffi$NEOFFI_14 into neo_ffi$RNEOFFI_14
+neo_ffi$RNEOFFI_14 <- as.character(neo_ffi$NEOFFI_14)
+neo_ffi$RNEOFFI_14[neo_ffi$NEOFFI_14 == "1"] <- "5"
+neo_ffi$RNEOFFI_14[neo_ffi$NEOFFI_14 == "2"] <- "4"
+neo_ffi$RNEOFFI_14[neo_ffi$NEOFFI_14 == "3"] <- "3"
+neo_ffi$RNEOFFI_14[neo_ffi$NEOFFI_14 == "4"] <- "2"
+neo_ffi$RNEOFFI_14[neo_ffi$NEOFFI_14 == "5"] <- "1"
+neo_ffi$RNEOFFI_14 <- as.numeric(neo_ffi$RNEOFFI_14)
+
+## Recoding neo_ffi$NEOFFI_24 into neo_ffi$RNEOFFI_24
+neo_ffi$RNEOFFI_24 <- as.character(neo_ffi$NEOFFI_24)
+neo_ffi$RNEOFFI_24[neo_ffi$NEOFFI_24 == "1"] <- "5"
+neo_ffi$RNEOFFI_24[neo_ffi$NEOFFI_24 == "2"] <- "4"
+neo_ffi$RNEOFFI_24[neo_ffi$NEOFFI_24 == "3"] <- "3"
+neo_ffi$RNEOFFI_24[neo_ffi$NEOFFI_24 == "4"] <- "2"
+neo_ffi$RNEOFFI_24[neo_ffi$NEOFFI_24 == "5"] <- "1"
+neo_ffi$RNEOFFI_24 <- as.numeric(neo_ffi$RNEOFFI_24)
+
+## Recoding neo_ffi$NEOFFI_29 into neo_ffi$RNEOFFI_29
+neo_ffi$RNEOFFI_29 <- as.character(neo_ffi$NEOFFI_29)
+neo_ffi$RNEOFFI_29[neo_ffi$NEOFFI_29 == "1"] <- "5"
+neo_ffi$RNEOFFI_29[neo_ffi$NEOFFI_29 == "2"] <- "4"
+neo_ffi$RNEOFFI_29[neo_ffi$NEOFFI_29 == "3"] <- "3"
+neo_ffi$RNEOFFI_29[neo_ffi$NEOFFI_29 == "4"] <- "2"
+neo_ffi$RNEOFFI_29[neo_ffi$NEOFFI_29 == "5"] <- "1"
+neo_ffi$RNEOFFI_29 <- as.numeric(neo_ffi$RNEOFFI_29)
+
+## Recoding neo_ffi$NEOFFI_39 into neo_ffi$RNEOFFI_39
+neo_ffi$RNEOFFI_39 <- as.character(neo_ffi$NEOFFI_39)
+neo_ffi$RNEOFFI_39[neo_ffi$NEOFFI_39 == "1"] <- "5"
+neo_ffi$RNEOFFI_39[neo_ffi$NEOFFI_39 == "2"] <- "4"
+neo_ffi$RNEOFFI_39[neo_ffi$NEOFFI_39 == "3"] <- "3"
+neo_ffi$RNEOFFI_39[neo_ffi$NEOFFI_39 == "4"] <- "2"
+neo_ffi$RNEOFFI_39[neo_ffi$NEOFFI_39 == "5"] <- "1"
+neo_ffi$RNEOFFI_39 <- as.numeric(neo_ffi$RNEOFFI_39)
+
+## Recoding neo_ffi$NEOFFI_44 into neo_ffi$RNEOFFI_44
+neo_ffi$RNEOFFI_44 <- as.character(neo_ffi$NEOFFI_44)
+neo_ffi$RNEOFFI_44[neo_ffi$NEOFFI_44 == "1"] <- "5"
+neo_ffi$RNEOFFI_44[neo_ffi$NEOFFI_44 == "2"] <- "4"
+neo_ffi$RNEOFFI_44[neo_ffi$NEOFFI_44 == "3"] <- "3"
+neo_ffi$RNEOFFI_44[neo_ffi$NEOFFI_44 == "4"] <- "2"
+neo_ffi$RNEOFFI_44[neo_ffi$NEOFFI_44 == "5"] <- "1"
+neo_ffi$RNEOFFI_44 <- as.numeric(neo_ffi$RNEOFFI_44)
+
+## Recoding neo_ffi$NEOFFI_54 into neo_ffi$RNEOFFI_54
+neo_ffi$RNEOFFI_54 <- as.character(neo_ffi$NEOFFI_54)
+neo_ffi$RNEOFFI_54[neo_ffi$NEOFFI_54 == "1"] <- "5"
+neo_ffi$RNEOFFI_54[neo_ffi$NEOFFI_54 == "2"] <- "4"
+neo_ffi$RNEOFFI_54[neo_ffi$NEOFFI_54 == "3"] <- "3"
+neo_ffi$RNEOFFI_54[neo_ffi$NEOFFI_54 == "4"] <- "2"
+neo_ffi$RNEOFFI_54[neo_ffi$NEOFFI_54 == "5"] <- "1"
+neo_ffi$RNEOFFI_54 <- as.numeric(neo_ffi$RNEOFFI_54)
+
+## Recoding neo_ffi$NEOFFI_59 into neo_ffi$RNEOFFI_59
+neo_ffi$RNEOFFI_59 <- as.character(neo_ffi$NEOFFI_59)
+neo_ffi$RNEOFFI_59[neo_ffi$NEOFFI_59 == "1"] <- "5"
+neo_ffi$RNEOFFI_59[neo_ffi$NEOFFI_59 == "2"] <- "4"
+neo_ffi$RNEOFFI_59[neo_ffi$NEOFFI_59 == "3"] <- "3"
+neo_ffi$RNEOFFI_59[neo_ffi$NEOFFI_59 == "4"] <- "2"
+neo_ffi$RNEOFFI_59[neo_ffi$NEOFFI_59 == "5"] <- "1"
+neo_ffi$RNEOFFI_59 <- as.numeric(neo_ffi$RNEOFFI_59)
+
+
+## Recoding neo_ffi$NEOFFI_15 into neo_ffi$RNEOFFI_15
+neo_ffi$RNEOFFI_15 <- as.character(neo_ffi$NEOFFI_15)
+neo_ffi$RNEOFFI_15[neo_ffi$NEOFFI_15 == "1"] <- "5"
+neo_ffi$RNEOFFI_15[neo_ffi$NEOFFI_15 == "2"] <- "4"
+neo_ffi$RNEOFFI_15[neo_ffi$NEOFFI_15 == "3"] <- "3"
+neo_ffi$RNEOFFI_15[neo_ffi$NEOFFI_15 == "4"] <- "2"
+neo_ffi$RNEOFFI_15[neo_ffi$NEOFFI_15 == "5"] <- "1"
+neo_ffi$RNEOFFI_15 <- as.numeric(neo_ffi$RNEOFFI_15)
+
+## Recoding neo_ffi$NEOFFI_30 into neo_ffi$RNEOFFI_30
+neo_ffi$RNEOFFI_30 <- as.character(neo_ffi$NEOFFI_30)
+neo_ffi$RNEOFFI_30[neo_ffi$NEOFFI_30 == "1"] <- "5"
+neo_ffi$RNEOFFI_30[neo_ffi$NEOFFI_30 == "2"] <- "4"
+neo_ffi$RNEOFFI_30[neo_ffi$NEOFFI_30 == "3"] <- "3"
+neo_ffi$RNEOFFI_30[neo_ffi$NEOFFI_30 == "4"] <- "2"
+neo_ffi$RNEOFFI_30[neo_ffi$NEOFFI_30 == "5"] <- "1"
+neo_ffi$RNEOFFI_30 <- as.numeric(neo_ffi$RNEOFFI_30)
+
+## Recoding neo_ffi$NEOFFI_45 into neo_ffi$RNEOFFI_45
+neo_ffi$RNEOFFI_45 <- as.character(neo_ffi$NEOFFI_45)
+neo_ffi$RNEOFFI_45[neo_ffi$NEOFFI_45 == "1"] <- "5"
+neo_ffi$RNEOFFI_45[neo_ffi$NEOFFI_45 == "2"] <- "4"
+neo_ffi$RNEOFFI_45[neo_ffi$NEOFFI_45 == "3"] <- "3"
+neo_ffi$RNEOFFI_45[neo_ffi$NEOFFI_45 == "4"] <- "2"
+neo_ffi$RNEOFFI_45[neo_ffi$NEOFFI_45 == "5"] <- "1"
+neo_ffi$RNEOFFI_45 <- as.numeric(neo_ffi$RNEOFFI_45)
+
+## Recoding neo_ffi$NEOFFI_55 into neo_ffi$RNEOFFI_55
+neo_ffi$RNEOFFI_55 <- as.character(neo_ffi$NEOFFI_55)
+neo_ffi$RNEOFFI_55[neo_ffi$NEOFFI_55 == "1"] <- "5"
+neo_ffi$RNEOFFI_55[neo_ffi$NEOFFI_55 == "2"] <- "4"
+neo_ffi$RNEOFFI_55[neo_ffi$NEOFFI_55 == "3"] <- "3"
+neo_ffi$RNEOFFI_55[neo_ffi$NEOFFI_55 == "4"] <- "2"
+neo_ffi$RNEOFFI_55[neo_ffi$NEOFFI_55 == "5"] <- "1"
+neo_ffi$RNEOFFI_55 <- as.numeric(neo_ffi$RNEOFFI_55)
+
+## Recoding neo_ffi$NEOFFI_01 into neo_ffi$RNEOFFI_01
+neo_ffi$RNEOFFI_01 <- as.character(neo_ffi$NEOFFI_01)
+neo_ffi$RNEOFFI_01[neo_ffi$NEOFFI_01 == "1"] <- "5"
+neo_ffi$RNEOFFI_01[neo_ffi$NEOFFI_01 == "2"] <- "4"
+neo_ffi$RNEOFFI_01[neo_ffi$NEOFFI_01 == "3"] <- "3"
+neo_ffi$RNEOFFI_01[neo_ffi$NEOFFI_01 == "4"] <- "2"
+neo_ffi$RNEOFFI_01[neo_ffi$NEOFFI_01 == "5"] <- "1"
+neo_ffi$RNEOFFI_01 <- as.numeric(neo_ffi$RNEOFFI_01)
+
+## Recoding neo_ffi$NEOFFI_16 into neo_ffi$RNEOFFI_16
+neo_ffi$RNEOFFI_16 <- as.character(neo_ffi$NEOFFI_16)
+neo_ffi$RNEOFFI_16[neo_ffi$NEOFFI_16 == "1"] <- "5"
+neo_ffi$RNEOFFI_16[neo_ffi$NEOFFI_16 == "2"] <- "4"
+neo_ffi$RNEOFFI_16[neo_ffi$NEOFFI_16 == "3"] <- "3"
+neo_ffi$RNEOFFI_16[neo_ffi$NEOFFI_16 == "4"] <- "2"
+neo_ffi$RNEOFFI_16[neo_ffi$NEOFFI_16 == "5"] <- "1"
+neo_ffi$RNEOFFI_16 <- as.numeric(neo_ffi$RNEOFFI_16)
+
+## Recoding neo_ffi$NEOFFI_31 into neo_ffi$RNEOFFI_31
+neo_ffi$RNEOFFI_31 <- as.character(neo_ffi$NEOFFI_31)
+neo_ffi$RNEOFFI_31[neo_ffi$NEOFFI_31 == "1"] <- "5"
+neo_ffi$RNEOFFI_31[neo_ffi$NEOFFI_31 == "2"] <- "4"
+neo_ffi$RNEOFFI_31[neo_ffi$NEOFFI_31 == "3"] <- "3"
+neo_ffi$RNEOFFI_31[neo_ffi$NEOFFI_31 == "4"] <- "2"
+neo_ffi$RNEOFFI_31[neo_ffi$NEOFFI_31 == "5"] <- "1"
+neo_ffi$RNEOFFI_31 <- as.numeric(neo_ffi$RNEOFFI_31)
+
+## Recoding neo_ffi$NEOFFI_46 into neo_ffi$RNEOFFI_46
+neo_ffi$RNEOFFI_46 <- as.character(neo_ffi$NEOFFI_46)
+neo_ffi$RNEOFFI_46[neo_ffi$NEOFFI_46 == "1"] <- "5"
+neo_ffi$RNEOFFI_46[neo_ffi$NEOFFI_46 == "2"] <- "4"
+neo_ffi$RNEOFFI_46[neo_ffi$NEOFFI_46 == "3"] <- "3"
+neo_ffi$RNEOFFI_46[neo_ffi$NEOFFI_46 == "4"] <- "2"
+neo_ffi$RNEOFFI_46[neo_ffi$NEOFFI_46 == "5"] <- "1"
+neo_ffi$RNEOFFI_46 <- as.numeric(neo_ffi$RNEOFFI_46)
+
+## Recoding neo_ffi$NEOFFI_03 into neo_ffi$RNEOFFI_03
+neo_ffi$RNEOFFI_03 <- as.character(neo_ffi$NEOFFI_03)
+neo_ffi$RNEOFFI_03[neo_ffi$NEOFFI_03 == "1"] <- "5"
+neo_ffi$RNEOFFI_03[neo_ffi$NEOFFI_03 == "2"] <- "4"
+neo_ffi$RNEOFFI_03[neo_ffi$NEOFFI_03 == "3"] <- "3"
+neo_ffi$RNEOFFI_03[neo_ffi$NEOFFI_03 == "4"] <- "2"
+neo_ffi$RNEOFFI_03[neo_ffi$NEOFFI_03 == "5"] <- "1"
+neo_ffi$RNEOFFI_03 <- as.numeric(neo_ffi$RNEOFFI_03)
+
+## Recoding neo_ffi$NEOFFI_08 into neo_ffi$RNEOFFI_08
+neo_ffi$RNEOFFI_08 <- as.character(neo_ffi$NEOFFI_08)
+neo_ffi$RNEOFFI_08[neo_ffi$NEOFFI_08 == "1"] <- "5"
+neo_ffi$RNEOFFI_08[neo_ffi$NEOFFI_08 == "2"] <- "4"
+neo_ffi$RNEOFFI_08[neo_ffi$NEOFFI_08 == "3"] <- "3"
+neo_ffi$RNEOFFI_08[neo_ffi$NEOFFI_08 == "4"] <- "2"
+neo_ffi$RNEOFFI_08[neo_ffi$NEOFFI_08 == "5"] <- "1"
+neo_ffi$RNEOFFI_08 <- as.numeric(neo_ffi$RNEOFFI_08)
+
+## Recoding neo_ffi$NEOFFI_18 into neo_ffi$RNEOFFI_18
+neo_ffi$RNEOFFI_18 <- as.character(neo_ffi$NEOFFI_18)
+neo_ffi$RNEOFFI_18[neo_ffi$NEOFFI_18 == "1"] <- "5"
+neo_ffi$RNEOFFI_18[neo_ffi$NEOFFI_18 == "2"] <- "4"
+neo_ffi$RNEOFFI_18[neo_ffi$NEOFFI_18 == "3"] <- "3"
+neo_ffi$RNEOFFI_18[neo_ffi$NEOFFI_18 == "4"] <- "2"
+neo_ffi$RNEOFFI_18[neo_ffi$NEOFFI_18 == "5"] <- "1"
+neo_ffi$RNEOFFI_18 <- as.numeric(neo_ffi$RNEOFFI_18)
+
+## Recoding neo_ffi$NEOFFI_23 into neo_ffi$RNEOFFI_23
+neo_ffi$RNEOFFI_23 <- as.character(neo_ffi$NEOFFI_23)
+neo_ffi$RNEOFFI_23[neo_ffi$NEOFFI_23 == "1"] <- "5"
+neo_ffi$RNEOFFI_23[neo_ffi$NEOFFI_23 == "2"] <- "4"
+neo_ffi$RNEOFFI_23[neo_ffi$NEOFFI_23 == "3"] <- "3"
+neo_ffi$RNEOFFI_23[neo_ffi$NEOFFI_23 == "4"] <- "2"
+neo_ffi$RNEOFFI_23[neo_ffi$NEOFFI_23 == "5"] <- "1"
+neo_ffi$RNEOFFI_23 <- as.numeric(neo_ffi$RNEOFFI_23)
+
+## Recoding neo_ffi$NEOFFI_33 into neo_ffi$RNEOFFI_33
+neo_ffi$RNEOFFI_33 <- as.character(neo_ffi$NEOFFI_33)
+neo_ffi$RNEOFFI_33[neo_ffi$NEOFFI_33 == "1"] <- "5"
+neo_ffi$RNEOFFI_33[neo_ffi$NEOFFI_33 == "2"] <- "4"
+neo_ffi$RNEOFFI_33[neo_ffi$NEOFFI_33 == "3"] <- "3"
+neo_ffi$RNEOFFI_33[neo_ffi$NEOFFI_33 == "4"] <- "2"
+neo_ffi$RNEOFFI_33[neo_ffi$NEOFFI_33 == "5"] <- "1"
+neo_ffi$RNEOFFI_33 <- as.numeric(neo_ffi$RNEOFFI_33)
+
+## Recoding neo_ffi$NEOFFI_38 into neo_ffi$RNEOFFI_38
+neo_ffi$RNEOFFI_38 <- as.character(neo_ffi$NEOFFI_38)
+neo_ffi$RNEOFFI_38[neo_ffi$NEOFFI_38 == "1"] <- "5"
+neo_ffi$RNEOFFI_38[neo_ffi$NEOFFI_38 == "2"] <- "4"
+neo_ffi$RNEOFFI_38[neo_ffi$NEOFFI_38 == "3"] <- "3"
+neo_ffi$RNEOFFI_38[neo_ffi$NEOFFI_38 == "4"] <- "2"
+neo_ffi$RNEOFFI_38[neo_ffi$NEOFFI_38 == "5"] <- "1"
+neo_ffi$RNEOFFI_38 <- as.numeric(neo_ffi$RNEOFFI_38)
+
+## Recoding neo_ffi$NEOFFI_48 into neo_ffi$RNEOFFI_48
+neo_ffi$RNEOFFI_48 <- as.character(neo_ffi$NEOFFI_48)
+neo_ffi$RNEOFFI_48[neo_ffi$NEOFFI_48 == "1"] <- "5"
+neo_ffi$RNEOFFI_48[neo_ffi$NEOFFI_48 == "2"] <- "4"
+neo_ffi$RNEOFFI_48[neo_ffi$NEOFFI_48 == "3"] <- "3"
+neo_ffi$RNEOFFI_48[neo_ffi$NEOFFI_48 == "4"] <- "2"
+neo_ffi$RNEOFFI_48[neo_ffi$NEOFFI_48 == "5"] <- "1"
+neo_ffi$RNEOFFI_48 <- as.numeric(neo_ffi$RNEOFFI_48)
+```
+
+
+# Results
+
+## Descriptive statistics and reliability analysis
+
+```{r Descriptives, include=FALSE}
+
+# demographics
+demographics$Age <- as.numeric(demographics$Age)
+demographics$SES <- as.numeric(demographics$SES)
+
+# create descriptive table for the demographic vars  with gtsummary
+desc_table <- demographics%>%
+  tbl_summary(
+    by = Gender,
+    type = list(Age ~ 'continuous',
+                SES~'continuous'),
+    statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                     all_categorical() ~ "{n} ({p}%)"),
+    
+    digits = all_continuous() ~ 2,
+    label = list(Age ~ "Age",
+                 SES ~ "Socio-economic Status",
+                 Marital_Status~ "Marrital Status"),
+    missing = "no",
+    sort = all_categorical() ~ "frequency",
+    ) %>% add_overall() %>% bold_labels() %>% 
+modify_header(label ~ "**Variable**") %>% 
+  modify_caption("Demographic Characteristics (n=50)")  
+
+as_tibble(desc_table) -> desc_tibble 
+as_kable_extra(desc_table, format = "latex",booktabs = T) -> desc_kable #save it as a knitr::kable
+des_gt_Gender_hux <- as_hux_table(desc_table)
+
+
+```
+
+
+```{r des-int}
+internet_sample <- read_excel("Data for sharing - Internet validation sample.xlsx")
+internet_sample_descriptives <- internet_sample %>% 
+  dplyr::select(gender:marital)
+
+
+# create descriptive table for the demographic vars  with gtsummary
+desc_table_internet <- internet_sample_descriptives%>%
+  tbl_summary(
+    by = gender,
+    type = list(age ~ 'continuous'),
+    statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                     all_categorical() ~ "{n} ({p}%)"),
+    
+    digits = all_continuous() ~ 2,
+    # label = list(Age ~ "Age",
+    #              SES ~ "Socio-economic Status",
+    #              Marital_Status~ "Marrital Status"),
+    missing = "no",
+    sort = all_categorical() ~ "frequency",
+    ) %>% add_overall() %>% bold_labels() %>% 
+modify_header(label ~ "**Variable**") %>% 
+  modify_caption("Demographic Characteristics of Internet Sample (n=1000)")  
+
+```
+
+```{r}
+scale_descriptives <- bigfive %>% 
+  dplyr::select(BFI01, BFI06, RBFI11,RBFI16, BFI21, RBFI26, RBFI31, RBFI36, BFI41 ,BFI46 , RBFI51 , BFI56,
+                
+        BFI02 , BFI07 , RBFI12 ,RBFI17 , RBFI22 , BFI27 , BFI32 , RBFI37 , RBFI42 ,  RBFI47 , BFI52 ,BFI57, 
+        RBFI03 , RBFI08 , BFI13 , BFI18 , RBFI23 , RBFI28 , BFI33 , BFI38 , BFI43  , RBFI48 ,BFI53 ,RBFI58,
+        
+        RBFI04 , RBFI09 , BFI14 , BFI19 , RBFI24 , RBFI29 , BFI34 , BFI39 ,RBFI44 ,RBFI49 ,BFI54 , BFI59,
+         
+        RBFI05 , BFI10 ,BFI15 ,BFI20 , RBFI25 ,RBFI30 , BFI35 ,BFI40 , RBFI45 , RBFI50 ,RBFI55 ,BFI60)
+
+
+scale_descriptives_table <- as.data.frame(tabledown::des.tab(scale_descriptives,reverse = T))
+write.csv( scale_descriptives_table, "scale_descriptives.csv")
+```
+
+
+
+```{r reliability}
+
+#BFI Domains:
+
+# Extraversion: 1, 6, 11R, 16R, 21, 26R, 31R, 36R, 41, 46, 51R, 56
+# Agreeableness: 2, 7, 12R, 17R, 22R, 27, 32, 37R, 42R, 47R, 52, 57
+# Conscientiousness: 3R, 8R, 13, 18, 23R, 28R, 33, 38, 43, 48R, 53, 58R
+# Negative Emotionality: 4R, 9R, 14, 19, 24R, 29R, 34, 39, 44R, 49R, 54, 59
+# Open-Mindedness: 5R, 10, 15, 20, 25R, 30R, 35, 40, 45R, 50R, 55R, 60
+
+bfi_extraversion <- bigfive %>% 
+  dplyr::select(BFI01, BFI06, RBFI11, RBFI16, BFI21, RBFI26, RBFI31, RBFI36, BFI41, BFI46, RBFI51, BFI56)
+
+bfi_aggreableness <- bigfive %>% 
+  dplyr::select(BFI02, BFI07, RBFI12, RBFI17, RBFI22, BFI27, BFI32, RBFI37, RBFI42, RBFI47, BFI52, BFI57)
+
+bfi_conscientiousness <- bigfive %>% 
+  dplyr::select(RBFI03, RBFI08, BFI13, BFI18, RBFI23, RBFI28, BFI33, BFI38, BFI43, RBFI48, BFI53, RBFI58)
+
+bfi_ne <- bigfive %>% 
+  dplyr::select(RBFI04, RBFI09, BFI14, BFI19, RBFI24, RBFI29, BFI34, BFI39, RBFI44, RBFI49, BFI54, BFI59)
+
+bfi_open <- bigfive %>% 
+  dplyr::select(RBFI05, BFI10, BFI15, BFI20, RBFI25, RBFI30, BFI35, BFI40, RBFI45, RBFI50, RBFI55, BFI60)
+
+
+# BFI Facets
+Sociability <- bigfive %>% 
+  dplyr::select(BFI01, RBFI16, RBFI31, BFI46)
+
+Assertiveness <- bigfive %>% 
+  dplyr::select (BFI06, BFI21, RBFI36, RBFI51)
+
+Energy_Level <- bigfive %>% 
+  dplyr::select(RBFI11, RBFI26, BFI41, BFI56)
+
+Compassion <- bigfive %>% 
+  dplyr::select (BFI02, RBFI17, BFI32, RBFI47)
+
+Respectfulness <- bigfive %>% 
+  dplyr::select( BFI07, RBFI22, RBFI37, BFI52)
+
+Trust <- bigfive %>% 
+  dplyr::select( RBFI12, BFI27, RBFI42, BFI57)
+
+Organization <- bigfive %>% 
+  dplyr::select (RBFI03, BFI18, BFI33, RBFI48)
+
+Productiveness <-  bigfive %>% 
+  dplyr::select( RBFI08, RBFI23, BFI38, BFI53)
+
+Responsibility <- bigfive %>% 
+  dplyr::select( BFI13, RBFI28, BFI43, RBFI58)
+
+Anxiety <- bigfive %>% 
+  dplyr::select( RBFI04, BFI19, BFI34, RBFI49)
+
+Depression <-  bigfive %>% 
+  dplyr::select (RBFI09, RBFI24, BFI39, BFI54)
+
+Emotional_Volatility<-  bigfive %>% 
+  dplyr::select (BFI14, RBFI29, RBFI44, BFI59)
+Intellectual_Curiosity<-  bigfive %>% 
+  dplyr::select(  BFI10, RBFI25, BFI40, RBFI55)
+
+Aesthetic_Sensitivity<-  bigfive %>% 
+  dplyr::select(  RBFI05, BFI20, BFI35, RBFI50)
+
+Creative_Imagination<-  bigfive %>% 
+  dplyr::select( BFI15, RBFI30, RBFI45, BFI60)
+
+
+
+#NEO-FFI Domains
+
+neoffi_extraversion <- neo_ffi %>% 
+dplyr::select(NEOFFI_02, NEOFFI_17, RNEOFFI_12, NEOFFI_17, NEOFFI_22, RNEOFFI_27, NEOFFI_32, NEOFFI_37, RNEOFFI_42, NEOFFI_47, NEOFFI_52, RNEOFFI_57)
+
+neoffi_agreeableness<- neo_ffi %>% 
+dplyr::select(NEOFFI_04, RNEOFFI_09, RNEOFFI_14, NEOFFI_19, RNEOFFI_24, RNEOFFI_29, NEOFFI_34, RNEOFFI_39, RNEOFFI_44, NEOFFI_49, RNEOFFI_54, RNEOFFI_59)
+
+neoffi_conscientiousness<- neo_ffi %>% 
+dplyr::select( NEOFFI_05, NEOFFI_10, RNEOFFI_15, NEOFFI_20, NEOFFI_25, RNEOFFI_30, NEOFFI_35, NEOFFI_40, RNEOFFI_45, NEOFFI_50, RNEOFFI_55, NEOFFI_60)
+
+neoffi_neuroticism<- neo_ffi %>% 
+dplyr::select( RNEOFFI_01, NEOFFI_06, NEOFFI_11, RNEOFFI_16, NEOFFI_21, NEOFFI_26, RNEOFFI_31, NEOFFI_36, NEOFFI_41, RNEOFFI_46, NEOFFI_51, NEOFFI_56)
+
+neoffi_open<- neo_ffi %>% 
+dplyr::select( RNEOFFI_03, RNEOFFI_08, NEOFFI_13, RNEOFFI_18, RNEOFFI_23, NEOFFI_28, RNEOFFI_33, RNEOFFI_38, NEOFFI_43, RNEOFFI_48, NEOFFI_53, NEOFFI_58)
+
+
+
+#Reliability assessment of BFI Domains
+## Alpha
+reliability_extraversion_bfi <- psych::alpha(bfi_extraversion)
+reliability_aggreableness_bfi <- psych::alpha(bfi_aggreableness)
+reliability_conscientiousness_bfi <- psych::alpha(bfi_conscientiousness)
+reliability_ne_bfi <- psych::alpha(bfi_ne)
+reliability_open_bfi <- psych::alpha(bfi_open)
+
+## Omega
+reliability_extraversion_bfi_omega <- psych::omega(bfi_extraversion, nfactors =1)
+reliability_aggreableness_bfi_omega <- psych::omega(bfi_aggreableness,nfactors =1)
+reliability_conscientiousness_bfi_omega <- psych::omega(bfi_conscientiousness,nfactors =1)
+reliability_ne_bfi_omega <- psych::omega(bfi_ne,nfactors =1)
+reliability_open_bfi_omega <- psych::omega(bfi_open,nfactors =1)
+
+
+## Ordinal alpha (Some of the code is not working due to lower sample size)
+
+reliability_extraversion_bfi_ordinal <- psych::alpha(polychoric(bfi_extraversion)$rho)
+
+reliability_aggreableness_bfi_ordinal <- psych::alpha(polychoric(bfi_aggreableness)$rho)
+reliability_conscientiousness_bfi_ordinal <- psych::alpha(polychoric(bfi_conscientiousness)$rho)
+reliability_ne_bfi_ordinal <- psych::alpha(polychoric(bfi_ne)$rho)
+reliability_open_bfi_ordinal <- psych::alpha(polychoric(bfi_open)$rho)
+
+
+#Reliability assessment of BFI facets
+
+##Alpha
+sociability_alpha <- psych::alpha(Sociability)
+assertiveness_alpha<- psych::alpha(Assertiveness)
+energy_alpha<- psych::alpha(Energy_Level)
+compassion_alpha<- psych::alpha(Compassion)
+Respectfulness_alpha<- psych::alpha(Respectfulness)
+trust_alpha<- psych::alpha(Trust)
+organization_alpha<- psych::alpha(Organization)
+productiveness_alpha<- psych::alpha(Productiveness)
+responsibility_alpha<- psych::alpha(Responsibility)
+anxiety_alpha<- psych::alpha(Anxiety)
+depression_alpha<- psych::alpha(Depression)
+emotional_alpha<- psych::alpha(Emotional_Volatility)
+intellectual_alpha<- psych::alpha(Intellectual_Curiosity)
+aesthetic_alpha<- psych::alpha(Aesthetic_Sensitivity)
+creative_alpha<- psych::alpha(Creative_Imagination)
+
+
+
+#Omega
+sociability_omega <- psych::omega(Sociability, nfactors = 1)
+assertiveness_omega<- psych::omega(Assertiveness,nfactors = 1)
+energy_omega<- psych::omega(Energy_Level,nfactors = 1)
+compassion_omega<- psych::omega(Compassion,nfactors = 1)
+Respectfulness_omega<- psych::omega(Respectfulness,nfactors = 1)
+trust_omega<- psych::omega(Trust,nfactors = 1)
+organization_omega<- psych::omega(Organization, nfactors = 1)
+productiveness_omega<- psych::omega(Productiveness, nfactors = 1)
+responsibility_omega<- psych::omega(Responsibility, nfactors = 1)
+anxiety_omega<- psych::omega(Anxiety,nfactors = 1)
+depression_omega<- psych::omega(Depression, nfactors = 1)
+emotional_omega<- psych::omega(Emotional_Volatility,nfactors = 1)
+intellectual_omega<- psych::omega(Intellectual_Curiosity,nfactors = 1)
+aesthetic_omega<- psych::omega(Aesthetic_Sensitivity,nfactors = 1)
+creative_omega<- psych::omega(Creative_Imagination,nfactors = 1)
+
+
+#Reliability analysis of NEO_FFI
+## Alpha
+reliability_extraversion_neoffi <- psych::alpha(neoffi_extraversion)
+reliability_aggreableness_neoffi <- psych::alpha(neoffi_agreeableness)
+reliability_conscientiousness_neoffi<- psych::alpha(neoffi_conscientiousness)
+reliability_ne_neoffi <- psych::alpha(neoffi_neuroticism)
+reliability_open_neoffi <- psych::alpha(neoffi_open)
+
+
+## omega
+reliability_extraversion_neoffi_omega <- psych::omega(neoffi_extraversion, nfactors = 1)
+reliability_aggreableness_neoffi_omega <- psych::omega(neoffi_agreeableness, nfactors = 1)
+reliability_conscientiousness_neoffi_omega<- psych::omega(neoffi_conscientiousness, nfactors = 1)
+reliability_ne_neoffi_omega <- psych::omega(neoffi_neuroticism, nfactors = 1)
+reliability_open_neoffi_omega <- psych::omega(neoffi_open, nfactors = 1)
+
+## Ordinal alpha 
+
+reliability_extraversion_neoffi_ordinal <- psych::alpha(polychoric(neoffi_extraversion)$rho)
+
+reliability_aggreableness_neoffi_ordinal <- psych::alpha(polychoric(neoffi_agreeableness)$rho)
+reliability_conscientiousness_neoffi_ordinal <- psych::alpha(polychoric(neoffi_conscientiousness)$rho)
+reliability_ne_neoffi_ordinal <- psych::alpha(polychoric(neoffi_neuroticism)$rho)
+reliability_open_neoffi_ordinal <- psych::alpha(polychoric(neoffi_open)$rho)
+
+
+```
+
+
+## Domain and facet level structural Validity
+
+### Domain
+
+```{r esem-domain, eval=FALSE, include=FALSE}
+# devtools::install_github("MateusPsi/esemComp")
+library(esemComp)
+esem_data <- bigfive %>% 
+  dplyr::select(BFI01, BFI06, RBFI11,RBFI16, BFI21, RBFI26, RBFI31, RBFI36, BFI41 ,BFI46 , RBFI51 , BFI56,
+                
+        BFI02 , BFI07 , RBFI12 ,RBFI17 , RBFI22 , BFI27 , BFI32 , RBFI37 , RBFI42 ,  RBFI47 , BFI52 ,BFI57, 
+        RBFI03 , RBFI08 , BFI13 , BFI18 , RBFI23 , RBFI28 , BFI33 , BFI38 , BFI43  , RBFI48 ,BFI53 ,RBFI58,
+        
+        RBFI04 , RBFI09 , BFI14 , BFI19 , RBFI24 , RBFI29 , BFI34 , BFI39 ,RBFI44 ,RBFI49 ,BFI54 , BFI59,
+         
+        RBFI05 , BFI10 ,BFI15 ,BFI20 , RBFI25 ,RBFI30 , BFI35 ,BFI40 , RBFI45 , RBFI50 ,RBFI55 ,BFI60)
+
+
+esem_data_2 <- as.data.frame(lapply(esem_data, as.numeric))
+#Rename variables
+# names(esem_data) <- paste0("x", c(1:29))
+
+#creating a target matrix
+target_rot <- esemComp::make_target(60,#Item number
+                                    mainloadings=list(
+                                      Extrovert=1:12,
+                                      Agree=13:24,
+                                       Concen=25:36,
+                                        NE=37:48,
+                                       OM=49:60))
+
+
+esem_tareget_efa <- esem_efa(esem_data_2,nfactors=5, target= target_rot, fm="ml")
+
+#Find the referent item for each factor
+referents <- find_referents(esem_tareget_efa, factor_names = c("F1", "F2", "F3","F4", "F5"))
+
+#make esem model
+esem_model <- syntax_composer(esem_tareget_efa, referents)
+
+#print model
+# writeLines(esem_model)
+
+
+#Fit the model
+esem_fit <- lavaan::cfa(esem_model, esem_data_2,ordered = names(esem_data_2), estimator = "WLSMV", mimic = "Mplus", std.lv=T)
+
+esem_sumary <- summary(esem_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+# 
+# 
+# fitmeasures (esem_fit ,c("gfi", "agfi", "nfi","rfi", "cfi.scaled","tli.scaled","rmsea.scaled", "srmr","aic"))
+
+fitmeasures (esem_fit ,c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+rel.esm <- reliability(esem_fit, return.total = TRUE)
+# 
+# rel.esm.m <- rel.esm[4,]
+
+
+library("semTools")
+
+saveFile(esem_fit, "esem_domain.txt","coef", tableFormat = T)
+```
+
+
+### Facet
+```{r CFA-domain, eval=FALSE, include=FALSE}
+#Not accepted
+
+big.five.model.1<- 
+'Extraversion=~ BFI01+ BFI06+ RBFI11+ RBFI16+ BFI21+ RBFI26+ RBFI31+ RBFI36+ BFI41+ BFI46+ RBFI51+ BFI56
+Agreeableness=~ BFI02+ BFI07+ RBFI12+ RBFI17+ RBFI22+ BFI27+ BFI32+ RBFI37+ RBFI42+ BFI47+ BFI52+ BFI57
+Conscientiousness=~ RBFI03+ RBFI08+ BFI13+ BFI18+ RBFI23+ RBFI28+ BFI33+ BFI38+ BFI43+ RBFI48+ BFI53+ BFI58
+NE=~ RBFI04+ RBFI09+ BFI14+ BFI19+ RBFI24+ RBFI29+ BFI34+ BFI39+ RBFI44+ RBFI49+ BFI54+ BFI59
+OM=~ RBFI05+ BFI10+ BFI15+ BFI20+ RBFI25+ RBFI30+ BFI35+ BFI40+ RBFI45+ RBFI50+ RBFI55+ BFI60'
+
+big.five.1.fit <-cfa(big.five.model.1, data = bigfive, estimator = "WLSMV",ordered=T, mimic = "Mplus")
+
+big.five.sum.1 <- lavaan::summary(big.five.1.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+big.five..fit.ind.2 <- fitmeasures (big.five.1.fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+```
+
+```{r CFA-facet, eval=FALSE, include=FALSE}
+#Not accepted
+big.five.model.1<- 
+'Soc =~ BFI01 + RBFI16 + BFI46+RBFI31
+Ass =~  BFI21 +RBFI36 +RBFI51+BFI06
+EL =~ BFI11+BFI41+ BFI56+RBFI26
+Compassion =~ BFI02+RBFI17+BFI32+RBFI47
+Respect =~ BFI07+RBFI22+RBFI37+BFI52
+Trust =~ RBFI12+BFI27+RBFI42+BFI57
+Organization =~ RBFI03 + BFI18 +BFI33 +RBFI48
+Productiveness=~ RBFI08 + RBFI23+ BFI38 +BFI53
+Responsibility =~ BFI13+RBFI28+BFI43+RBFI58
+Anxiety=~RBFI04 +BFI19 +BFI34 +RBFI49
+Depresion=~RBFI09+RBFI24+BFI39+BFI54
+EV=~BFI14 +RBFI29 +RBFI44+BFI59 
+IC =~ BFI10+RBFI25+BFI40+RBFI55
+AS=~RBFI05+BFI20+BFI35 + RBFI50
+CI=~BFI15 +RBFI30 + RBFI45  +BFI60
+
+Extra=~ Soc+Ass+EL
+Agreeableness=~Compassion+Respect+Trust
+Cons=~Organization+Productiveness+Responsibility
+NE=~Anxiety+Depresion+EV
+OM=~IC+AS+CI
+'
+
+big.five.1.fit <-cfa(big.five.model.1, data = bigfive, estimator = "WLSMV",ordered=T, mimic = "Mplus")
+
+big.five.sum.1 <- lavaan::summary(big.five.1.fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+big.five..fit.ind.2 <- fitmeasures (big.five.1.fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+```
+
+```{r bigfive-extrovert, include=F}
+
+
+## Model 1Unidimensional model: 
+extra_model_1 <- ' extra=~ BFI01 + RBFI16 + BFI46+RBFI31+BFI21 +RBFI36 +RBFI51+BFI06+BFI41+ BFI56+RBFI26+RBFI11'
+
+extra_model_1_fit <-cfa(extra_model_1, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+extra_model_1_sum <- lavaan::summary(extra_model_1_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+extra_model_1_fitindx <- fitmeasures (extra_model_1_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr"))
+
+extra_model_1_reliability <- semTools::reliability(extra_model_1_fit, return.total = T)
+
+
+
+## Model 1 modified 
+modfit_extra_model_1 <- modindices(extra_model_1_fit, sort. = TRUE)
+modfit_extra_model_1 [modfit_extra_model_1 $mi>3.84,]
+
+#We will investigate which items  have potentially higher modification index and modify the model.
+
+## Model 2 Unidimensional model with with Acquiescence
+
+
+extra_model_2 <- ' extra=~ BFI01 + RBFI16 + BFI46+RBFI31+BFI21 +RBFI36 +RBFI51+BFI06+BFI41+ BFI56+RBFI26+RBFI11
+
+acc =~ 1*BFI01 + 1*RBFI16 + 1*BFI46+1*RBFI31+1*BFI21 +1*RBFI36 +1*RBFI51+1*BFI06+1*BFI41+ 1*BFI56+1*RBFI26+1*RBFI11
+extra ~~ 0*acc'
+
+extra_model_2_fit <-cfa(extra_model_2, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+extra_model_2_sum <- lavaan::summary(extra_model_2_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+extra_model_2_fitindx <- fitmeasures (extra_model_2_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+extra_model_2_reliability <- semTools::reliability(extra_model_2_fit, return.total = T)
+
+
+## Model 2 modified Unidimensional model with with Acquiescence 
+
+modfit_extra_model_2 <- modindices(extra_model_2_fit, sort. = TRUE)
+modfit_extra_model_2 [modfit_extra_model_2$mi>3.84,]
+
+
+
+## Model 3 Extroversion: postive and negative
+
+
+extra_model_3 <- ' positive=~ BFI01+BFI46+BFI21+BFI06+BFI41+BFI56+RBFI11
+negative=~ RBFI16 +RBFI31 +RBFI36 +RBFI51+RBFI26
+'
+
+extra_model_3_fit <-cfa(extra_model_3, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+extra_model_3_sum <- lavaan::summary(extra_model_3_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+extra_model_3_fitindx <- fitmeasures (extra_model_3_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+extra_model_3_reliability <- reliability(extra_model_3_fit, return.total = T)
+
+## Model 3 modified 
+
+modfit_extra_model_3 <- modindices(extra_model_3_fit, sort. = TRUE)
+modfit_extra_model_3 [modfit_extra_model_3$mi>3.84,]
+
+
+
+
+
+## Model 4 Extroversion: Three facets
+
+
+extra_model_4<- 'Soc =~ BFI01 + RBFI16 + BFI46+RBFI31
+                   Ass =~  BFI21 +RBFI36 +RBFI51+BFI06
+EL =~ BFI41+ BFI56+RBFI26+RBFI11
+'
+
+extra_model_4_fit <-cfa(extra_model_4, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+extra_model_4_sum <- lavaan::summary(extra_model_4_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+extra_model_4_fitindx <- fitmeasures (extra_model_4_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+extra_model_4_reliability <- reliability(extra_model_4_fit, return.total = T)
+
+
+
+## Model 4 Extroversion: Three facets modified 
+
+
+
+
+
+## Model 5 Extroversion: Three facets with Acquiescence
+
+
+extra_model_5<- 'Soc =~ BFI01 + RBFI16 + BFI46+RBFI31
+                   Ass =~  BFI21 +RBFI36 +RBFI51+BFI06
+EL =~ BFI41+ BFI56+RBFI26+RBFI11
+acc =~ 1*BFI01 + (-1)*RBFI16 + 1*BFI46+ (-1)*RBFI31+1*BFI21 +(-1)*RBFI36 +(-1)*RBFI51+1*BFI06+1*RBFI11+1*BFI41+ 1*BFI56+(-1)*RBFI26
+Soc ~~ 0*acc
+Ass~~ 0*acc
+EL~~ 0*acc'
+
+extra_model_5_fit <-cfa(extra_model_5, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+extra_model_5_sum <- lavaan::summary(extra_model_5_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+extra_model_5_fitindx <- fitmeasures (extra_model_5_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+extra_model_5_reliability <- reliability(extra_model_5_fit, return.total = T)
+
+
+
+## Model 5 modified Extroversion: Three facets with Acquiescence
+
+```
+
+```{r bigfive-agree, include=F}
+## Model 1 Unidimensional model:
+agree_model_1 <- ' agree=~ BFI02 + BFI07 + RBFI12 +RBFI17 + RBFI22 + BFI27 + BFI32 + RBFI37 + RBFI42 +  RBFI47 + BFI52 +BFI57'
+
+agree_model_1_fit <-cfa(agree_model_1, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+agree_model_1_sum <- lavaan::summary(agree_model_1_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+agree_model_1_fitindx <- fitmeasures (agree_model_1_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+agree_model_1_reliability <- semTools::reliability(agree_model_1_fit, return.total = T)
+
+
+
+## Model 2 Unidimensional model with with Acquiescence
+
+
+agree_model_2 <- ' agree=~BFI02 + BFI07 + RBFI12 +RBFI17 + RBFI22 + BFI27 + BFI32 + RBFI37 + RBFI42 +  RBFI47 + BFI52 +BFI57
+
+acc=~1*BFI02+1*RBFI17+1*BFI32+1*RBFI47+1*BFI07+1*RBFI22+1*RBFI37+1*BFI52+1*RBFI12+1*BFI27+1*RBFI42+1*BFI57
+agree ~~ 0*acc'
+
+agree_model_2_fit <-cfa(agree_model_2, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+agree_model_2_sum <- lavaan::summary(agree_model_2_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+agree_model_2_fitindx <- fitmeasures (agree_model_2_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+agree_model_2_reliability <- semTools::reliability(agree_model_2_fit, return.total = T)
+
+
+## Model 3 Extroversion: postive and negative
+
+
+agree_model_3 <- ' positive=~ BFI02 + BFI07+ BFI27 + BFI32 + BFI52 +BFI57
+negative=~ RBFI12 +RBFI17 + RBFI22 + RBFI37 + RBFI42 +  RBFI47
+'
+
+agree_model_3_fit <-cfa(agree_model_3, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+agree_model_3_sum <- lavaan::summary(agree_model_3_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+agree_model_3_fitindx <- fitmeasures (agree_model_3_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+agree_model_3_reliability <- semTools::reliability(agree_model_3_fit, return.total = T)
+
+
+## Model 4: Three facets
+
+
+agree_model_4<- 'Compassion =~ RBFI47+BFI02+RBFI17+BFI32
+Respect =~ BFI07+RBFI22+RBFI37+BFI52
+Trust =~ RBFI12+BFI27+RBFI42+BFI57
+'
+
+agree_model_4_fit <-cfa(agree_model_4, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+agree_model_4_sum <- lavaan::summary(agree_model_4_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+agree_model_4_fitindx <- fitmeasures (agree_model_4_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+agree_model_4_reliability <- semTools::reliability(agree_model_4_fit, return.total = T)
+
+
+
+
+## Model 5: Three facets with Acquiescence
+
+
+agree_model_5<- 'Compassion =~ RBFI47+BFI02+RBFI17+BFI32
+Respect =~ BFI07+RBFI22+RBFI37+BFI52
+Trust =~ RBFI12+BFI27+RBFI42+BFI57
+acc=~1*BFI02+1*RBFI17+1*BFI32+1*RBFI47+1*BFI07+1*RBFI22+1*RBFI37+1*BFI52+1*RBFI12+1*BFI27+1*RBFI42+1*BFI57
+Compassion ~~ 0*acc
+Respect~~ 0*acc
+Trust~~ 0*acc
+'
+
+agree_model_5_fit <-cfa(agree_model_5, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+agree_model_5_sum <- lavaan::summary(agree_model_5_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+agree_model_5_fitindx <- fitmeasures (agree_model_5_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+agree_model_5_reliability <- semTools::reliability(agree_model_5_fit, return.total = T)
+
+
+agree_all_model_fit <- tabledown::cfa.tab.multi(agree_model_1_fit,                                                   agree_model_2_fit, agree_model_3_fit, agree_model_4_fit, agree_model_5_fit,  robust=F)
+
+agree_all_model_fit <- as.data.frame(agree_all_model_fit)
+
+
+agree_rownames <- c("Agree Model 1", "AgreeModel 2", 
+                          "Agree Model 3",  "AgreeModel 4", 
+                          "Agree Model 5")
+
+
+
+
+rownames(agree_all_model_fit) <- agree_rownames
+agree_all_model_fit <- rownames_to_column(agree_all_model_fit)
+```
+
+```{r bigfive-cons, include=F}
+## Model 1 Unidimensional model:
+cons_model_1 <- ' cons=~ RBFI03 + RBFI08 + BFI13 + BFI18 + RBFI23 + RBFI28 + BFI33 + BFI38 + BFI43  + RBFI48 +BFI53 +RBFI58
+'
+
+cons_model_1_fit <-cfa(cons_model_1, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+cons_model_1_sum <- lavaan::summary(cons_model_1_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+cons_model_1_fitindx <- fitmeasures (cons_model_1_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+cons_model_1_reliability <- semTools::reliability(cons_model_1_fit, return.total = T)
+
+
+
+## Model 2 Unidimensional model with with Acquiescence
+
+
+cons_model_2 <- ' cons=~RBFI03 + RBFI08 + BFI13 + BFI18 + RBFI23 + RBFI28 + BFI33 + BFI38 + BFI43  + RBFI48 +BFI53 +RBFI58
+
+acc=~1*RBFI03 + 1*BFI18 +1*BFI33+ 1*RBFI48+1*RBFI08 + 1*RBFI23+ 1*BFI38 +1*BFI53+1*BFI13+1*RBFI28+1*BFI43+1*RBFI58
+cons ~~ 0*acc'
+
+cons_model_2_fit <-cfa(cons_model_2, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+cons_model_2_sum <- lavaan::summary(cons_model_2_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+cons_model_2_fitindx <- fitmeasures (cons_model_2_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+cons_model_2_reliability <- semTools::reliability(cons_model_2_fit, return.total = T)
+
+
+## Model 3 Extroversion: postive and negative
+
+
+cons_model_3 <- ' positive=~  BFI13 + BFI18 +  BFI33 + BFI38 + BFI43   +BFI53 
+                  negative=~ RBFI03 + RBFI08  + RBFI23 + RBFI28 + RBFI48 +RBFI58'
+
+cons_model_3_fit <-cfa(cons_model_3, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+cons_model_3_sum <- lavaan::summary(cons_model_3_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+cons_model_3_fitindx <- fitmeasures (cons_model_3_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+cons_model_3_reliability <- semTools::reliability(cons_model_3_fit, return.total = T)
+
+
+## Model 4: Three facets
+
+
+cons_model_4<- 'Organization =~ RBFI03 + BFI18 +BFI33 +RBFI48
+Productiveness=~ RBFI08 + RBFI23+ BFI38 +BFI53
+Responsibility =~ BFI13+RBFI28+BFI43+RBFI58
+'
+
+cons_model_4_fit <-cfa(cons_model_4, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+cons_model_4_sum <- lavaan::summary(cons_model_4_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+cons_model_4_fitindx <- fitmeasures (cons_model_4_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+cons_model_4_reliability <- semTools::reliability(cons_model_4_fit, return.total = T)
+
+
+
+
+## Model 5: Three facets with Acquiescence
+
+
+cons_model_5<- 'Organization =~ RBFI03 + BFI18 +BFI33 +RBFI48
+Productiveness=~  RBFI23+ BFI38 +BFI53+RBFI08 
+Responsibility =~ BFI13+RBFI28+BFI43+RBFI58
+acc=~1*RBFI03 + 1*BFI18 +1*BFI33+ 1*RBFI48+1*RBFI08 + 1*RBFI23+ 1*BFI38 +1*BFI53+1*BFI13+1*RBFI28+1*BFI43+1*RBFI58
+
+Organization ~~ 0*acc
+Productiveness~~ 0*acc
+Organization~~ 0*acc
+'
+
+cons_model_5_fit <-cfa(cons_model_5, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+cons_model_5_sum <- lavaan::summary(cons_model_5_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+cons_model_5_fitindx <- fitmeasures (cons_model_5_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+# cons_model_5_reliability <- semTools::reliability(cons_model_5_fit, return.total = T)
+
+
+cons_all_model_fit <- tabledown::cfa.tab.multi(cons_model_1_fit,                                                   cons_model_2_fit, cons_model_3_fit, cons_model_4_fit, cons_model_5_fit,  robust=F)
+
+cons_all_model_fit <- as.data.frame(cons_all_model_fit)
+
+
+cons_rownames <- c("Cons Model 1", "Cons Model 2", 
+                          "Cons Model 3",  "Cons Model 4", 
+                          "Cons Model 5")
+
+
+
+
+rownames(cons_all_model_fit) <- cons_rownames
+cons_all_model_fit <- rownames_to_column(cons_all_model_fit)
+```
+
+```{r bigfive-ne, include=F}
+## Model 1 Unidimensional model:
+ne_model_1 <- ' ne=~ RBFI04 + RBFI09 + BFI14 + BFI19 + RBFI24 + RBFI29 + BFI34 + BFI39 +RBFI44 +RBFI49 +BFI54 + BFI59
+'
+
+ne_model_1_fit <-cfa(ne_model_1, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+ne_model_1_sum <- lavaan::summary(ne_model_1_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+ne_model_1_fitindx <- fitmeasures (ne_model_1_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+ne_model_1_reliability <- semTools::reliability(ne_model_1_fit, return.total = T)
+
+
+
+## Model 2 Unidimensional model with with Acquiescence
+
+
+ne_model_2 <- ' ne=~RBFI04 + RBFI09 + BFI14 + BFI19 + RBFI24 + RBFI29 + BFI34 + BFI39 +RBFI44 +RBFI49 +BFI54 + BFI59
+acc =~1*RBFI04 +1*BFI19 +1*BFI34 +1*RBFI49+1*RBFI09+1*RBFI24+1*BFI39+1*BFI54+1*BFI14 +1*RBFI29 +1*RBFI44+1*BFI59
+ne ~~ 0*acc'
+
+ne_model_2_fit <-cfa(ne_model_2, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+ne_model_2_sum <- lavaan::summary(ne_model_2_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+ne_model_2_fitindx <- fitmeasures (ne_model_2_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+ne_model_2_reliability <- semTools::reliability(ne_model_2_fit, return.total = T)
+
+
+## Model 3 Extroversion: postive and negative
+
+
+ne_model_3 <- ' positive=~  BFI14 + BFI19 +  BFI34 + BFI39 +BFI54 + BFI59
+                  negative=~ RBFI04 + RBFI09 + RBFI24 + RBFI29  +RBFI44 +RBFI49 '
+
+ne_model_3_fit <-cfa(ne_model_3, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+ne_model_3_sum <- lavaan::summary(ne_model_3_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+ne_model_3_fitindx <- fitmeasures (ne_model_3_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+ne_model_3_reliability <- semTools::reliability(ne_model_3_fit, return.total = T)
+
+
+## Model 4: Three facets
+
+
+ne_model_4<- 'Anxiety=~RBFI04 +BFI19 +BFI34 +RBFI49
+Depresion=~RBFI09+RBFI24+BFI39+BFI54
+EV=~BFI14 +RBFI29 +RBFI44+BFI59 '
+
+ne_model_4_fit <-cfa(ne_model_4, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+ne_model_4_sum <- lavaan::summary(ne_model_4_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+ne_model_4_fitindx <- fitmeasures (ne_model_4_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+ne_model_4_reliability <- semTools::reliability(ne_model_4_fit, return.total = T)
+
+
+
+
+## Model 5: Three facets with Acquiescence
+
+
+ne_model_5<- 'Anxiety=~RBFI04 +BFI19 +BFI34 +RBFI49
+Depresion=~RBFI09+RBFI24+BFI39+BFI54
+EV=~BFI14 +RBFI29 +RBFI44+BFI59
+acc =~1*RBFI04 +1*BFI19 +1*BFI34 +1*RBFI49+1*RBFI09+1*RBFI24+1*BFI39+1*BFI54+1*BFI14 +1*RBFI29 +1*RBFI44+1*BFI59
+Anxiety~~0*acc
+Depresion~~0*acc
+EV~~0*acc'
+
+
+
+ne_model_5_fit <-cfa(ne_model_5, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+ne_model_5_sum <- lavaan::summary(ne_model_5_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+ne_model_5_fitindx <- fitmeasures (ne_model_5_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+ne_model_5_reliability <- semTools::reliability(ne_model_5_fit, return.total = T)
+
+
+ne_all_model_fit <- tabledown::cfa.tab.multi(ne_model_1_fit,                                                   ne_model_2_fit, ne_model_3_fit, ne_model_4_fit, ne_model_5_fit,  robust=F)
+
+ne_all_model_fit <- as.data.frame(ne_all_model_fit)
+
+
+ne_rownames <- c("NE Model 1", "NE Model 2", 
+                          "NE Model 3",  "NE Model 4", 
+                          "NE Model 5")
+
+
+
+
+rownames(ne_all_model_fit) <- ne_rownames
+ne_all_model_fit <- rownames_to_column(ne_all_model_fit)
+```
+
+```{r bigfive-om, include=F}
+## Model 1 Unidimensional model:
+om_model_1 <- ' om=~ RBFI05 + BFI10 +BFI15 +BFI20 + RBFI25 +RBFI30 + BFI35 +BFI40 + RBFI45 + RBFI50 +RBFI55 +BFI60'
+
+om_model_1_fit <-cfa(om_model_1, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+om_model_1_sum <- lavaan::summary(om_model_1_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+om_model_1_fitindx <- fitmeasures (om_model_1_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+om_model_1_reliability <- semTools::reliability(om_model_1_fit, return.total = T)
+
+
+
+## Model 2 Unidimensional model with with Acquiescence
+
+
+om_model_2 <- ' om=~RBFI05 + BFI10 +BFI15 +BFI20 + RBFI25 +RBFI30 + BFI35 +BFI40 + RBFI45 + RBFI50 +RBFI55 +BFI60
+acc =~1*BFI10+1*RBFI25+1*BFI40+1*RBFI55+1*RBFI05+1*BFI20+1*BFI35 + 1*RBFI50+1*BFI15 +1*RBFI30 + 1*RBFI45  +1*BFI60
+om ~~ 0*acc'
+
+om_model_2_fit <-cfa(om_model_2, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+om_model_2_sum <- lavaan::summary(om_model_2_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+om_model_2_fitindx <- fitmeasures (om_model_2_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+om_model_2_reliability <- semTools::reliability(om_model_2_fit, return.total = T)
+
+
+## Model 3 Extroversion: postive and omgative
+
+
+om_model_3 <- ' positive=~  BFI10 +BFI15 +BFI20 + BFI35 +BFI40  +BFI60
+                  omgative=~ RBFI05 + RBFI25 +RBFI30 + RBFI45 + RBFI50 +RBFI55 '
+
+om_model_3_fit <-cfa(om_model_3, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+om_model_3_sum <- lavaan::summary(om_model_3_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+om_model_3_fitindx <- fitmeasures (om_model_3_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+om_model_3_reliability <- semTools::reliability(om_model_3_fit, return.total = T)
+
+
+## Model 4: Three facets
+
+
+om_model_4<- 'IC =~ BFI10+RBFI25+BFI40+RBFI55
+AS=~RBFI05++BFI20+BFI35 + RBFI50
+CI=~BFI15 +RBFI30 +   RBFI45  +BFI60
+
+'
+
+om_model_4_fit <-cfa(om_model_4, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+om_model_4_sum <- lavaan::summary(om_model_4_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+om_model_4_fitindx <- fitmeasures (om_model_4_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+om_model_4_reliability <- semTools::reliability(om_model_4_fit, return.total = T)
+
+
+
+
+## Model 5: Three facets with Acquiescence
+
+
+om_model_5<- 'IC =~ BFI10+RBFI25+BFI40+RBFI55
+AS=~RBFI05++BFI20+BFI35 + RBFI50
+CI=~BFI15 +RBFI30 +   RBFI45  +BFI60
+acc=~1*BFI10+1*RBFI25+1*BFI40+1*RBFI55+1*RBFI05+1*BFI20+1*BFI35 + 1*RBFI50+1*BFI15 +1*RBFI30 + 1*RBFI45  +1*BFI60
+IC~~0*acc
+AS~~0*acc
+CI~~0*acc'
+
+
+
+om_model_5_fit <-cfa(om_model_5, data = bigfive, ordered = names(bigfive), estimator = "WLSMV", mimic = "Mplus")
+
+# om_model_5_sum <- lavaan::summary(om_model_5_fit, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+om_model_5_fitindx <- fitmeasures (om_model_5_fit, c("gfi", "agfi", "nfi","rfi", "cfi","tli","rmsea", "srmr","aic"))
+
+om_model_5_reliability <- semTools::reliability(om_model_5_fit, return.total = T)
+
+
+om_all_model_fit <- tabledown::cfa.tab.multi(om_model_1_fit,                                                   om_model_2_fit, om_model_3_fit, om_model_4_fit, om_model_5_fit,  robust=F)
+
+om_all_model_fit <- as.data.frame(om_all_model_fit)
+
+
+om_rownames <- c("OM Model 1", "OM Model 2", 
+                          "OM Model 3",  "OM Model 4", 
+                          "OM Model 5")
+
+
+
+
+rownames(om_all_model_fit) <- om_rownames
+om_all_model_fit <- rownames_to_column(om_all_model_fit)
+```
+
+
+
+## Measurement Invariance
+
+## Gender MI
+```{r esem-domain-invariance-gender, eval=FALSE, include=FALSE}
+
+# Masrh  13 Model Taxonomy
+# model 1 none configural
+# model 2 loadings weak 
+# model 3 loadings residuals
+# model 4 loading factor cov
+# model 5 loading intercepts strong
+# model 6 loadings residuals factor cov
+# model 7 loading residuals intercepts  strict
+# model 8 loading factor cov intercepts
+# model 9 =Loadings, Residuals, Factor V/Cov, Intercepts
+# model 10= Loadings, Intercepts, Factor Means
+# model 11= Loadings, Residuals, Intercepts, Factor Means
+# model 12=Loadings, Factor V/Cov, Intercepts, Factor Means  
+# model 13= Loadings, Residuals, Factor V/Cov, Intercepts, Factor Means  
+
+
+esem_data <- bigfive %>% 
+  rowwise() %>% 
+  mutate(
+    Sociability =sum(BFI01, RBFI16, RBFI31, BFI46),
+    
+    Assertiveness =sum(BFI06, BFI21, RBFI36, RBFI51),
+    
+    Energy_Level =sum(RBFI11, RBFI26, BFI41, BFI56),
+    
+    Compassion =sum(BFI02, RBFI17, BFI32, RBFI47),
+    
+    Respectfulness =sum( BFI07, RBFI22, RBFI37, BFI52),
+    
+    Trust =sum( RBFI12, BFI27, RBFI42, BFI57),
+    
+    Organization = sum(RBFI03, BFI18, BFI33, RBFI48),
+    
+    Productiveness =sum( RBFI08, RBFI23, BFI38, BFI53),
+    
+    Responsibility =sum( BFI13, RBFI28, BFI43, RBFI58),
+    
+    Anxiety =sum( RBFI04, BFI19, BFI34, RBFI49),
+    
+    Depression =sum (RBFI09, RBFI24, BFI39, BFI54),
+    
+    Emotional_Volatility=sum (BFI14, RBFI29, RBFI44, BFI59),
+    
+    Intellectual_Curiosity=sum(  BFI10, RBFI25, BFI40, RBFI55),
+    
+    Aesthetic_Sensitivity=sum(  RBFI05, BFI20, BFI35, RBFI50),
+    
+    Creative_Imagination=sum( BFI15, RBFI30, RBFI45, BFI60)
+  )
+
+esem_data_2 <- esem_data %>% 
+  dplyr::select(Sociability:Creative_Imagination)
+
+#creating a target matrix
+target_rot <- esemComp::make_target(15,#Item number
+                                    mainloadings=list(
+                                      Extrovert=1:3,
+                                      Agree=4:6,
+                                      Concen=7:9,
+                                      NE=10:12,
+                                      OM=13:15))
+
+
+esem_tareget_efa <- esem_efa(esem_data_2,nfactors=5, target= target_rot, fm="ml")
+
+#Find the referent item for each factor
+referents <- find_referents(esem_tareget_efa, factor_names = c("F1", "F2", "F3","F4", "F5"))
+
+#make esem model
+esem_model <- syntax_composer(esem_tareget_efa, referents)
+
+
+
+
+invariance_data <- cbind(data_full$Gender,data_full$Education, esem_data_2)
+
+colnames(invariance_data)[1] <- "Gender" 
+colnames(invariance_data)[2] <- "Education" 
+
+invariance_data_model <- esem_model
+
+
+#Model 1
+invariance_model_1 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  control =list(iter.max=100000))
+
+
+invariance_model_1_summary <- summary(invariance_model_1, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_1 <- readRDS("Processeddata/Invariance_data/invariance_model_1_gender.rds")
+invariance_model_1_fitindices <- fitmeasures (invariance_model_1,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled", "rmsea",
+                        "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_1, "Processeddata/Invariance_data/invariance_model_1_gender.rds")
+
+#Model 2: Weak/metric
+
+invariance_model_2 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = "loadings")
+
+
+invariance_model_2_summary <- summary(invariance_model_2, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_2 <- readRDS("Processeddata/Invariance_data/invariance_model_2_gender.rds")
+
+invariance_model_2_fitindices <- fitmeasures (invariance_model_2,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled", "rmsea",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_2, "Processeddata/Invariance_data/invariance_model_2_gender.rds")
+
+
+
+#Model 3
+
+invariance_model_3 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals"))
+
+invariance_model_3_summary <- summary(invariance_model_3, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_3 <- readRDS("Processeddata/Invariance_data/invariance_model_3_gender.rds")
+
+invariance_model_3_fitindices <- fitmeasures (invariance_model_3,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+            
+
+write_rds(invariance_model_3, "Processeddata/Invariance_data/invariance_model_3_gender.rds")
+
+
+
+#Model 4
+
+invariance_model_4 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","lv.variances","lv.covariances"))
+
+invariance_model_4_summary <- summary(invariance_model_4, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_4 <- readRDS("Processeddata/Invariance_data/invariance_model_4_gender.rds")
+
+invariance_model_4_fitindices <- fitmeasures (invariance_model_4,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_4, "Processeddata/Invariance_data/invariance_model_4_gender.rds")
+
+
+#Model 5: Strong/Scaler
+
+invariance_model_5 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                 # ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts"))
+
+invariance_model_5_summary <- summary(invariance_model_5, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_5 <- readRDS("Processeddata/Invariance_data/invariance_model_5_gender.rds")
+
+invariance_model_5_fitindices <- fitmeasures (invariance_model_5,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_5, "Processeddata/Invariance_data/invariance_model_5_gender.rds")
+
+
+#Model 6
+
+invariance_model_6 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_6_summary <- summary(invariance_model_6, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_6 <- readRDS("Processeddata/Invariance_data/invariance_model_6_gender.rds")
+
+invariance_model_6_fitindices <- fitmeasures (invariance_model_6,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_6, "Processeddata/Invariance_data/invariance_model_6_gender.rds")
+
+
+
+#Model 7: Strict/residual
+
+invariance_model_7 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "residuals"))
+
+invariance_model_7_summary <- summary(invariance_model_7, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+
+# invariance_model_7 <- readRDS("Processeddata/Invariance_data/invariance_model_7_gender.rds")
+
+invariance_model_7_fitindices <- fitmeasures (invariance_model_7,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_7, "Processeddata/Invariance_data/invariance_model_7_gender.rds")
+
+
+#Model 8
+
+invariance_model_8 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances"))
+
+invariance_model_8_summary <- summary(invariance_model_8, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_8 <- readRDS("Processeddata/Invariance_data/invariance_model_8_gender.rds")
+
+
+invariance_model_8_fitindices <- fitmeasures (invariance_model_8,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_8, "Processeddata/Invariance_data/invariance_model_8_gender.rds")
+
+#Model 9
+
+invariance_model_9 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_9_summary <- summary(invariance_model_9, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_9 <- readRDS("Processeddata/Invariance_data/invariance_model_9_gender.rds")
+
+invariance_model_9_fitindices <- fitmeasures (invariance_model_9,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_9, "Processeddata/Invariance_data/invariance_model_9_gender.rds")
+
+
+#Model 10
+
+invariance_model_10 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "means"))
+
+invariance_model_10_summary <- summary(invariance_model_10, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_10 <- readRDS("Processeddata/Invariance_data/invariance_model_10_gender.rds")
+
+invariance_model_10_fitindices <- fitmeasures (invariance_model_10,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_10, "Processeddata/Invariance_data/invariance_model_10_gender.rds")
+
+
+#Model 11
+
+invariance_model_11 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "residuals","intercepts", "means"))
+
+invariance_model_11_summary <- summary(invariance_model_11, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_11 <- readRDS("Processeddata/Invariance_data/invariance_model_11_gender.rds")
+
+
+invariance_model_11_fitindices <- fitmeasures (invariance_model_11,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_11, "Processeddata/Invariance_data/invariance_model_11_gender.rds")
+
+
+#Model 12
+
+invariance_model_12 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","intercepts", "means"))
+
+# invariance_model_12 <- readRDS("Processeddata/Invariance_data/invariance_model_12_gender.rds")
+
+
+invariance_model_12_summary <- summary(invariance_model_12, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_12_fitindices <- fitmeasures (invariance_model_12,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_12, "Processeddata/Invariance_data/invariance_model_12_gender.rds")
+
+
+
+#Model 13
+
+invariance_model_13 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  #ordered =   names(invariance_data),
+                  group = "Gender",
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_13_summary <- summary(invariance_model_13, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+# invariance_model_13 <- readRDS("Processeddata/Invariance_data/invariance_model_13_gender.rds")
+
+
+invariance_model_13_fitindices <- fitmeasures (invariance_model_13,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_13, "Processeddata/Invariance_data/invariance_model_13_gender.rds")
+
+
+
+
+
+
+models <-  list("M1" = invariance_model_1, 
+                "M2" = invariance_model_2, 
+                "M3" = invariance_model_3, 
+                "M4" = invariance_model_4,
+                "M5"=invariance_model_5,
+                "M6"=invariance_model_6,
+                "M7"=invariance_model_7,
+                "M8"=invariance_model_8,
+                "M9"=invariance_model_9,
+                "M10"=invariance_model_10,
+                "M11"=invariance_model_11,
+                "M12"=invariance_model_12,
+                "M13"=invariance_model_13)
+
+
+
+esem_invariance.table <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq", "df",  "cfi","tli","rmsea", "rmsea.ci.lower", "rmsea.ci.upper" ),
+              scaled = F,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+
+esem_invariance.table <- esem_invariance.table %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance.table, "Processeddata/Invariance_data/invariance_data_table_esem_gender.rds")
+
+esem_invariance.table_scaled <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table_scaled) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+esem_invariance_table_scaled <- esem_invariance.table_scaled %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance_table_scaled, "Processeddata/Invariance_data/invariance_data_table_esem_gender_scaled.rds")
+
+
+full_invariance_table_gender <- readRDS("Processeddata/Invariance_data/invariance_data_table_esem_gender.rds")
+
+```
+
+### Education-MI
+
+```{r esem-domain-invariance-occupation, eval=FALSE, include=FALSE}
+
+#Model 1
+invariance_model_1 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV")
+
+
+invariance_model_1_summary <- summary(invariance_model_1, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_1_fitindices <- fitmeasures (invariance_model_1,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_1, "Processeddata/Invariance_data/invariance_model_1_occupation.rds")
+
+#Model 2: Weak/metric
+
+invariance_model_2 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = "loadings")
+
+
+invariance_model_2_summary <- summary(invariance_model_2, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_2_fitindices <- fitmeasures (invariance_model_2,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_2, "Processeddata/Invariance_data/invariance_model_2_occupation.rds")
+
+
+
+#Model 3
+
+invariance_model_3 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals"))
+
+invariance_model_3_summary <- summary(invariance_model_3, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_3_fitindices <- fitmeasures (invariance_model_3,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+            
+
+write_rds(invariance_model_3, "Processeddata/Invariance_data/invariance_model_3_occupation.rds")
+
+
+
+#Model 4
+
+invariance_model_4 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","lv.variances","lv.covariances"))
+
+invariance_model_4_summary <- summary(invariance_model_4, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_4_fitindices <- fitmeasures (invariance_model_4,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_4, "Processeddata/Invariance_data/invariance_model_4_occupation.rds")
+
+
+#Model 5: Strong/Scaler
+
+invariance_model_5 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts"))
+
+invariance_model_5_summary <- summary(invariance_model_5, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_5_fitindices <- fitmeasures (invariance_model_5,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_5, "Processeddata/Invariance_data/invariance_model_5_occupation.rds")
+
+
+#Model 6
+
+invariance_model_6 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_6_summary <- summary(invariance_model_6, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_6_fitindices <- fitmeasures (invariance_model_6,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_6, "Processeddata/Invariance_data/invariance_model_6_occupation.rds")
+
+
+
+#Model 7: Strict/residual
+
+invariance_model_7 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "residuals"))
+
+invariance_model_7_summary <- summary(invariance_model_7, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_7_fitindices <- fitmeasures (invariance_model_7,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_7, "Processeddata/Invariance_data/invariance_model_7_occupation.rds")
+
+
+#Model 8
+
+invariance_model_8 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances"))
+
+invariance_model_8_summary <- summary(invariance_model_8, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_8_fitindices <- fitmeasures (invariance_model_8,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_8, "Processeddata/Invariance_data/invariance_model_8_occupation.rds")
+
+#Model 9
+
+invariance_model_9 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_9_summary <- summary(invariance_model_9, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_9_fitindices <- fitmeasures (invariance_model_9,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_9, "Processeddata/Invariance_data/invariance_model_9_occupation.rds")
+
+
+#Model 10
+
+invariance_model_10 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "means"))
+
+invariance_model_10_summary <- summary(invariance_model_10, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_10_fitindices <- fitmeasures (invariance_model_10,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_10, "Processeddata/Invariance_data/invariance_model_10_occupation.rds")
+
+
+#Model 11
+
+invariance_model_11 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "residuals","intercepts", "means"))
+
+invariance_model_11_summary <- summary(invariance_model_11, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_11_fitindices <- fitmeasures (invariance_model_11,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_11, "Processeddata/Invariance_data/invariance_model_11_occupation.rds")
+
+
+#Model 12
+
+invariance_model_12 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_12_summary <- summary(invariance_model_12, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_12_fitindices <- fitmeasures (invariance_model_12,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_12, "Processeddata/Invariance_data/invariance_model_12_occupation.rds")
+
+
+
+#Model 13
+
+invariance_model_13 <- cfa(model = invariance_data_model,
+                  data = invariance_data,
+                  ordered =   names(invariance_data),
+                  group = "Occupation" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_13_summary <- summary(invariance_model_13, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_13_fitindices <- fitmeasures (invariance_model_13,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_13, "Processeddata/Invariance_data/invariance_model_13_occupation.rds")
+
+
+
+
+
+
+models <-  list("M1" = invariance_model_1, 
+                "M2" = invariance_model_2, 
+                "M3" = invariance_model_3, 
+                "M4" = invariance_model_4,
+                "M5"=invariance_model_5,
+                "M6"=invariance_model_6,
+                "M7"=invariance_model_7,
+                "M8"=invariance_model_8,
+                "M9"=invariance_model_9,
+                "M10"=invariance_model_10,
+                "M11"=invariance_model_11,
+                "M12"=invariance_model_12,
+                "M13"=invariance_model_13)
+
+
+
+esem_invariance.table <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+
+esem_invariance.table <- esem_invariance.table %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance.table, "Processeddata/Invariance_data/invariance_data_table_esem__occupation.rds")
+
+esem_invariance.table_scaled <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table_scaled) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+esem_invariance_table_scaled <- esem_invariance.table_scaled %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance_table_scaled, "Processeddata/Invariance_data/invariance_data_table_esem_occupation_scaled.rds")
+
+```
+
+
+### Language-MI
+
+```{r esem-domain-invariance-occupation, eval=FALSE, include=FALSE}
+
+# invariance_data_2 <- bigfive %>%
+#   dplyr::select(BFI01, BFI02, RBFI03, RBFI04, RBFI05, BFI06, BFI07, RBFI08, RBFI09, BFI10, RBFI11, RBFI12, BFI13, BFI14, BFI15, RBFI16,RBFI17, BFI18, BFI19, BFI20,
+#                 BFI21, RBFI22, RBFI23, RBFI24, RBFI25, RBFI26, BFI27, RBFI28, RBFI29, RBFI30, RBFI31, BFI32, BFI33, BFI34, BFI35, RBFI36, RBFI37, BFI38, BFI39, BFI40, BFI41, RBFI42, BFI43, RBFI44, RBFI45, BFI46, RBFI47, RBFI48, RBFI49, RBFI50, RBFI51, BFI52, BFI53, BFI54, RBFI55, BFI56, BFI57, RBFI58, BFI59, BFI60)
+# 
+# write_csv(invariance_data_2, "bigfive.csv")
+
+invariance_data_language <- read_excel("Language_invariance.xlsx")
+
+#Model 1
+invariance_model_1 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV")
+
+
+invariance_model_1_summary <- summary(invariance_model_1, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_1_fitindices <- fitmeasures (invariance_model_1,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_1, "Processeddata/Invariance_data/invariance_model_1_occupation.rds")
+
+#Model 2: Weak/metric
+
+invariance_model_2 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = "loadings")
+
+
+invariance_model_2_summary <- summary(invariance_model_2, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_2_fitindices <- fitmeasures (invariance_model_2,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_2, "Processeddata/Invariance_data/invariance_model_2_occupation.rds")
+
+
+
+#Model 3
+
+invariance_model_3 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals"))
+
+invariance_model_3_summary <- summary(invariance_model_3, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_3_fitindices <- fitmeasures (invariance_model_3,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+            
+
+write_rds(invariance_model_3, "Processeddata/Invariance_data/invariance_model_3_occupation.rds")
+
+
+
+#Model 4
+
+invariance_model_4 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","lv.variances","lv.covariances"))
+
+invariance_model_4_summary <- summary(invariance_model_4, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_4_fitindices <- fitmeasures (invariance_model_4,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_4, "Processeddata/Invariance_data/invariance_model_4_occupation.rds")
+
+
+#Model 5: Strong/Scaler
+
+invariance_model_5 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts"))
+
+invariance_model_5_summary <- summary(invariance_model_5, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_5_fitindices <- fitmeasures (invariance_model_5,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_5, "Processeddata/Invariance_data/invariance_model_5_occupation.rds")
+
+
+#Model 6
+
+invariance_model_6 <- cfa(model = invariance_data_model,
+                  data = invariance_data_languagea,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_6_summary <- summary(invariance_model_6, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_6_fitindices <- fitmeasures (invariance_model_6,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_6, "Processeddata/Invariance_data/invariance_model_6_occupation.rds")
+
+
+
+#Model 7: Strict/residual
+
+invariance_model_7 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "residuals"))
+
+invariance_model_7_summary <- summary(invariance_model_7, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_7_fitindices <- fitmeasures (invariance_model_7,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_7, "Processeddata/Invariance_data/invariance_model_7_occupation.rds")
+
+
+#Model 8
+
+invariance_model_8 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances"))
+
+invariance_model_8_summary <- summary(invariance_model_8, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_8_fitindices <- fitmeasures (invariance_model_8,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+write_rds(invariance_model_8, "Processeddata/Invariance_data/invariance_model_8_occupation.rds")
+
+#Model 9
+
+invariance_model_9 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "lv.variances","lv.covariances","residuals"))
+
+invariance_model_9_summary <- summary(invariance_model_9, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_9_fitindices <- fitmeasures (invariance_model_9,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_9, "Processeddata/Invariance_data/invariance_model_9_occupation.rds")
+
+
+#Model 10
+
+invariance_model_10 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "intercepts", "means"))
+
+invariance_model_10_summary <- summary(invariance_model_10, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_10_fitindices <- fitmeasures (invariance_model_10,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_10, "Processeddata/Invariance_data/invariance_model_10_occupation.rds")
+
+
+#Model 11
+
+invariance_model_11 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "residuals","intercepts", "means"))
+
+invariance_model_11_summary <- summary(invariance_model_11, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_11_fitindices <- fitmeasures (invariance_model_11,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_11, "Processeddata/Invariance_data/invariance_model_11_occupation.rds")
+
+
+#Model 12
+
+invariance_model_12 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_12_summary <- summary(invariance_model_12, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_12_fitindices <- fitmeasures (invariance_model_12,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_12, "Processeddata/Invariance_data/invariance_model_12_occupation.rds")
+
+
+
+#Model 13
+
+invariance_model_13 <- cfa(model = invariance_data_model,
+                  data = invariance_data_language,
+                  # ordered =   names(invariance_data_language),
+                  group = "Language" ,
+                  estimator = "WLSMV",
+                  group.equal = c("loadings","residuals", "lv.variances","lv.covariances","intercepts", "means"))
+
+invariance_model_13_summary <- summary(invariance_model_13, fit.measures =TRUE,standardized = TRUE, rsq =TRUE)
+
+invariance_model_13_fitindices <- fitmeasures (invariance_model_13,c("gfi", "agfi", "nfi","rfi", 
+                       "cfi","tli","cfi.scaled","tli.scaled",
+                       "rmsea", "rmsea.ci.lower", "rmsea.ci.upper","srmr"))
+
+
+write_rds(invariance_model_13, "Processeddata/Invariance_data/invariance_model_13_occupation.rds")
+
+
+
+
+
+
+models <-  list("M1" = invariance_model_1, 
+                "M2" = invariance_model_2, 
+                "M3" = invariance_model_3, 
+                "M4" = invariance_model_4,
+                "M5"=invariance_model_5,
+                "M6"=invariance_model_6,
+                "M7"=invariance_model_7,
+                "M8"=invariance_model_8,
+                "M9"=invariance_model_9,
+                "M10"=invariance_model_10,
+                "M11"=invariance_model_11,
+                "M12"=invariance_model_12,
+                "M13"=invariance_model_13)
+
+
+
+esem_invariance.table <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+
+esem_invariance.table <- esem_invariance.table %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance.table, "Processeddata/Invariance_data/invariance_data_table_esem__occupation.rds")
+
+esem_invariance.table_scaled <- compareLavaan(models,
+              nesting = "M1 > M2 > M3 > M4 > M5 > M6 > M7 > M8 > M9 > M10 > M11 > M12 > M13", 
+              fitmeas = c("chisq.scaled", "df",  "cfi","tli","rmsea", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled" ),
+              scaled = T,
+              chidif = T, digits = 2)
+
+colnames(esem_invariance.table_scaled) <- c("Chi-Square", "df", "CFI", "TLI", "RMSEA", "RMSEA 90% Lower CI", "RMSEA 90% Upper", "Chi-Square Difference", "df difference*", "p")
+
+
+esem_invariance_table_scaled <- esem_invariance.table_scaled %>%  mutate(CFA_diff = CFI - lag(CFI),
+                                                           TLI_diff= TLI- lag(TLI),
+                                                           RMSEA_diff= RMSEA-lag(RMSEA),
+                                                           CFI_invariance= ifelse(CFA_diff>-0.01, TRUE, FALSE),
+                                                           TLI_invariance= ifelse(TLI_diff>-0.01, TRUE, FALSE),
+                                                           RMSEA_invariance= ifelse(RMSEA_diff<0.01, TRUE, FALSE))
+
+write_rds(esem_invariance_table_scaled, "Processeddata/Invariance_data/invariance_data_table_esem_occupation_scaled.rds")
+
+```
+
+
+```{r}
+#Scale descriptives
+
+scale_descriptives <- cbind(data_full$Sample, data_full$ID,data_full$Gender, bigfive)
+
+Total_domain_facet <- scale_descriptives %>% 
+  rowwise() %>% 
+  mutate(bfi_extraversion_total=sum(BFI01, BFI06, RBFI11, RBFI16, BFI21, RBFI26, RBFI31, RBFI36, BFI41, BFI46, RBFI51, BFI56),
+         bfi_aggreableness_total=sum(BFI02, BFI07, RBFI12, RBFI17, RBFI22, BFI27, BFI32, RBFI37, RBFI42, RBFI47, BFI52, BFI57),
+         bfi_conscientiousness_total=sum(RBFI03, RBFI08, BFI13, BFI18, RBFI23, RBFI28, BFI33, BFI38, BFI43, RBFI48, BFI53, RBFI58),
+         bfi_ne_total=sum(RBFI04, RBFI09, BFI14, BFI19, RBFI24, RBFI29, BFI34, BFI39, RBFI44, RBFI49, BFI54, BFI59),
+         bfi_open_total=sum(RBFI05, BFI10, BFI15, BFI20, RBFI25, RBFI30, BFI35, BFI40, RBFI45, RBFI50, RBFI55, BFI60),
+         Sociability =sum(BFI01, RBFI16, RBFI31, BFI46),
+
+Assertiveness =sum(BFI06, BFI21, RBFI36, RBFI51),
+
+Energy_Level =sum(RBFI11, RBFI26, BFI41, BFI56),
+
+Compassion =sum(BFI02, RBFI17, BFI32, RBFI47),
+
+Respectfulness =sum( BFI07, RBFI22, RBFI37, BFI52),
+
+Trust =sum( RBFI12, BFI27, RBFI42, BFI57),
+
+Organization = sum(RBFI03, BFI18, BFI33, RBFI48),
+
+Productiveness =sum( RBFI08, RBFI23, BFI38, BFI53),
+
+Responsibility =sum( BFI13, RBFI28, BFI43, RBFI58),
+
+Anxiety =sum( RBFI04, BFI19, BFI34, RBFI49),
+
+Depression =sum (RBFI09, RBFI24, BFI39, BFI54),
+
+Emotional_Volatility=sum (BFI14, RBFI29, RBFI44, BFI59),
+
+Intellectual_Curiosity=sum(  BFI10, RBFI25, BFI40, RBFI55),
+
+Aesthetic_Sensitivity=sum(  RBFI05, BFI20, BFI35, RBFI50),
+
+Creative_Imagination=sum( BFI15, RBFI30, RBFI45, BFI60)
+)
+
+descriptive_stat_data <- Total_domain_facet %>% 
+  dplyr::select(`data_full$Sample`:`data_full$Gender`,bfi_extraversion_total:Creative_Imagination)
+
+colnames(descriptive_stat_data) <- c("Sample", "ID", "Gender", "Extraversion",
+                                     "Aggreableness", "Conscientiousness",
+                                     "NE", "Open", "Sociability", "Assertiveness", "Energy_Level", "Compassion", "Respectfulness", "Trust","Organization", "Productiveness", "Responsibility", "Anxiety" , "Depression", "Emotional_Volatility", "Intellectual_Curiosity",      "Aesthetic_Sensitivity", "Creative_Imagination"
+                                     )
+
+descriptive_stat_data[335,]
+
+
+
+Total_domain_facet_mean <- scale_descriptives %>% 
+  rowwise() %>% 
+  mutate(bfi_extraversion_total=mean(BFI01, BFI06, RBFI11, RBFI16, BFI21, RBFI26, RBFI31, RBFI36, BFI41, BFI46, RBFI51, BFI56),
+         bfi_aggreableness_total=mean(BFI02, BFI07, RBFI12, RBFI17, RBFI22, BFI27, BFI32, RBFI37, RBFI42, RBFI47, BFI52, BFI57),
+         bfi_conscientiousness_total=mean(RBFI03, RBFI08, BFI13, BFI18, RBFI23, RBFI28, BFI33, BFI38, BFI43, RBFI48, BFI53, RBFI58),
+         bfi_ne_total=mean(RBFI04, RBFI09, BFI14, BFI19, RBFI24, RBFI29, BFI34, BFI39, RBFI44, RBFI49, BFI54, BFI59),
+         bfi_open_total=mean(RBFI05, BFI10, BFI15, BFI20, RBFI25, RBFI30, BFI35, BFI40, RBFI45, RBFI50, RBFI55, BFI60),
+         
+         Sociability =mean(BFI01, RBFI16, RBFI31, BFI46),
+
+Assertiveness =mean(BFI06, BFI21, RBFI36, RBFI51),
+
+Energy_Level =mean(RBFI11, RBFI26, BFI41, BFI56),
+
+Compassion =mean(BFI02, RBFI17, BFI32, RBFI47),
+
+Respectfulness =mean( BFI07, RBFI22, RBFI37, BFI52),
+
+Trust =mean( RBFI12, BFI27, RBFI42, BFI57),
+
+Organization = mean(RBFI03, BFI18, BFI33, RBFI48),
+
+Productiveness =mean( RBFI08, RBFI23, BFI38, BFI53),
+
+Responsibility =mean( BFI13, RBFI28, BFI43, RBFI58),
+
+Anxiety =mean( RBFI04, BFI19, BFI34, RBFI49),
+
+Depression =mean (RBFI09, RBFI24, BFI39, BFI54),
+
+Emotional_Volatility=mean (BFI14, RBFI29, RBFI44, BFI59),
+
+Intellectual_Curiosity=mean(  BFI10, RBFI25, BFI40, RBFI55),
+
+Aesthetic_Sensitivity=mean(  RBFI05, BFI20, BFI35, RBFI50),
+
+Creative_Imagination=mean( BFI15, RBFI30, RBFI45, BFI60)
+)
+
+descriptive_stat_data_mean <- Total_domain_facet_mean %>% 
+  dplyr::select(`data_full$Sample`:`data_full$Gender`,bfi_extraversion_total:Creative_Imagination)
+
+colnames(descriptive_stat_data_mean) <- c("Sample", "ID", "Gender", "Extraversion",
+                                     "Aggreableness", "Conscientiousness",
+                                     "NE", "Open", "Sociability", "Assertiveness", "Energy_Level", "Compassion", "Respectfulness", "Trust","Organization", "Productiveness", "Responsibility", "Anxiety" , "Depression", "Emotional_Volatility", "Intellectual_Curiosity",      "Aesthetic_Sensitivity", "Creative_Imagination"
+                                     )
+#P575
+descriptive_stat_data_mean[335,]
+write.csv(descriptive_stat_data, "Scores.csv")
+write.csv(descriptive_stat_data_mean, "Scores_mean.csv")
+
+descriptive_stat_data_short <- descriptive_stat_data %>% 
+  dplyr::select(-Sample, -ID)
+
+# create descriptive table for the demographic vars  with gtsummary
+desc_table_domain_facet_raw <- descriptive_stat_data_short%>%
+  tbl_summary(
+    by = Gender,
+    type = list(Extraversion ~ 'continuous',
+                Aggreableness~ 'continuous',
+                Conscientiousness~ 'continuous',
+                NE~ 'continuous',
+                Open~ 'continuous',
+                Sociability~ 'continuous',
+                Assertiveness~ 'continuous',
+                Energy_Level~ 'continuous',
+                Compassion~ 'continuous',
+                Respectfulness~ 'continuous',
+                Trust~ 'continuous',
+                Organization~ 'continuous',
+                Productiveness~ 'continuous',
+                Responsibility~ 'continuous',
+                Anxiety~ 'continuous',
+                Depression~ 'continuous',
+                Emotional_Volatility~ 'continuous',
+                Intellectual_Curiosity~ 'continuous',
+                Aesthetic_Sensitivity~ 'continuous',
+               Creative_Imagination ~ 'continuous'),
+    statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                     all_categorical() ~ "{n} ({p}%)"),
+    
+    digits = all_continuous() ~ 2,
+    # label = list(Age ~ "Age",
+    #              SES ~ "Socio-economic Status",
+    #              Marital_Status~ "Marrital Status"),
+    missing = "no",
+    sort = all_categorical() ~ "frequency",
+    ) %>% add_overall() %>% bold_labels() %>% 
+modify_header(label ~ "**Variable**") %>% 
+  modify_caption("Descriptive Statistics")  
+
+
+
+
+descriptive_stat_data_mean_short <- descriptive_stat_data_mean %>% 
+  dplyr::select(-Sample, -ID)
+
+# create descriptive table for the demographic vars  with gtsummary
+desc_table_domain_facet <- descriptive_stat_data_mean_short%>%
+  tbl_summary(
+    by = Gender,
+    type = list(Extraversion ~ 'continuous',
+                Aggreableness~ 'continuous',
+                Conscientiousness~ 'continuous',
+                NE~ 'continuous',
+                Open~ 'continuous',
+                Sociability~ 'continuous',
+                Assertiveness~ 'continuous',
+                Energy_Level~ 'continuous',
+                Compassion~ 'continuous',
+                Respectfulness~ 'continuous',
+                Trust~ 'continuous',
+                Organization~ 'continuous',
+                Productiveness~ 'continuous',
+                Responsibility~ 'continuous',
+                Anxiety~ 'continuous',
+                Depression~ 'continuous',
+                Emotional_Volatility~ 'continuous',
+                Intellectual_Curiosity~ 'continuous',
+                Aesthetic_Sensitivity~ 'continuous',
+               Creative_Imagination ~ 'continuous'),
+    statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                     all_categorical() ~ "{n} ({p}%)"),
+    
+    digits = all_continuous() ~ 2,
+    # label = list(Age ~ "Age",
+    #              SES ~ "Socio-economic Status",
+    #              Marital_Status~ "Marrital Status"),
+    missing = "no",
+    sort = all_categorical() ~ "frequency",
+    ) %>% add_overall() %>% bold_labels() %>% 
+modify_header(label ~ "**Variable**") %>% 
+  modify_caption("Descriptive Statistics")  
+
+
+```
+
+
+
+
+
+
+
+
+## Item Response Theory-based analysis
+
+
+```{r Bigfive-irt, include=F}
+#15 Facet df
+bigfive <- as.data.frame(lapply(bigfive, as.numeric))
+
+Sociability <- bigfive %>% 
+  dplyr::select(BFI01, RBFI16, RBFI31, BFI46)
+
+Assertiveness <- bigfive %>% 
+  dplyr::select (BFI06, BFI21, RBFI36, RBFI51)
+
+Energy_Level <- bigfive %>% 
+  dplyr::select(RBFI11, RBFI26, BFI41, BFI56)
+
+Compassion <- bigfive %>% 
+  dplyr::select (BFI02, RBFI17, BFI32, RBFI47)
+
+Respectfulness <- bigfive %>% 
+  dplyr::select( BFI07, RBFI22, RBFI37, BFI52)
+
+Trust <- bigfive %>% 
+  dplyr::select( RBFI12, BFI27, RBFI42, BFI57)
+
+Organization <- bigfive %>% 
+  dplyr::select (RBFI03, BFI18, BFI33, RBFI48)
+
+Productiveness <-  bigfive %>% 
+  dplyr::select( RBFI08, RBFI23, BFI38, BFI53)
+
+Responsibility <- bigfive %>% 
+  dplyr::select( BFI13, RBFI28, BFI43, RBFI58)
+
+Anxiety <- bigfive %>% 
+  dplyr::select( RBFI04, BFI19, BFI34, RBFI49)
+
+Depression <-  bigfive %>% 
+  dplyr::select (RBFI09, RBFI24, BFI39, BFI54)
+
+Emotional_Volatility<-  bigfive %>% 
+  dplyr::select (BFI14, RBFI29, RBFI44, BFI59)
+
+Intellectual_Curiosity<-  bigfive %>% 
+  dplyr::select(  BFI10, RBFI25, BFI40, RBFI55)
+
+Aesthetic_Sensitivity<-  bigfive %>% 
+  dplyr::select(  RBFI05, BFI20, BFI35, RBFI50)
+
+Creative_Imagination<-  bigfive %>% 
+  dplyr::select( BFI15, RBFI30, RBFI45, BFI60)
+
+#Model fit
+soc.fit <- mirt(Sociability , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+ass.fit <- mirt(Assertiveness , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+el.fit <- mirt(Energy_Level , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+comp.fit <- mirt(Compassion , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+resp.fit <- mirt(Respectfulness , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+
+trust.fit <- mirt(Trust , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+
+org.fit <- mirt(Organization , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+prod.fit <- mirt(Productiveness , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+rsps.fit <- mirt(Responsibility , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+anx.fit <- mirt(Anxiety , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+dep.fit <- mirt(Depression , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+ev.fit <- mirt(Emotional_Volatility , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+ic.fit <- mirt(Intellectual_Curiosity , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+as.fit <- mirt(Aesthetic_Sensitivity , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+ci.fit <- mirt(Creative_Imagination , model = 1, itemtype = 'graded', 
+               SE = TRUE, Se.type = 'MHRM',
+               technical = list(NCYCLES = 10000))
+
+# Model Parameters 
+
+##Sociability
+soc.params <- coef(soc.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+soc.items <- data.frame(soc.params$items)
+soc_item_arranged <- arrange(soc.items, desc(a) )
+# Selected items RBF16 & BF46
+
+##Assertiveness
+ass.params <- coef(ass.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+ass.items <- data.frame(ass.params$items)
+ass_item_arranged <- arrange(ass.items, desc(a) )
+# Selected items  BF21 & RBF36 
+
+##Energy level
+el.params <- coef(el.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+el.items <- data.frame(el.params$items)
+el_item_arranged <- arrange(el.items, desc(a) )
+# Selected items BF41 & RBF11
+
+##Compassion
+comp.params <- coef(comp.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+comp.items <- data.frame(comp.params$items)
+comp_item_arranged <- arrange(comp.items, desc(a) )
+# Selected items RBF17 & BF32
+
+##Respectfulness
+resp.params <- coef(resp.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+resp.items <- data.frame(resp.params$items)
+resp_item_arranged <- arrange(resp.items, desc(a) )
+# Selected items BF52 & RBF22
+
+##Trust
+trust.params <- coef(trust.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+trust.items <- data.frame(trust.params$items)
+trust_item_arranged <- arrange(trust.items, desc(a) )
+# Selected items RBF12 & BF57
+
+##Organization
+org.params <- coef(org.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+org.items <- data.frame(org.params$items)
+org_item_arranged <- arrange(org.items, desc(a) )
+# Selected items BF33 & RBF3
+
+##Productiveness
+prod.params <- coef(prod.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+prod.items <- data.frame(prod.params$items)
+prod_item_arranged <- arrange(prod.items, desc(a) )
+# Selected items RBF23 & BF38
+
+
+##Responsibility
+rsps.params <- coef(rsps.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+rsps.items <- data.frame(rsps.params$items)
+rsps_item_arranged <- arrange(rsps.items, desc(a) )
+# Selected items RBF58 & BF43
+
+##Anxiety
+anx.params <- coef(anx.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+anx.items <- data.frame(anx.params$items)
+anx_item_arranged <- arrange(anx.items, desc(a) )
+# Selected items BF34 & RBF4
+
+##Depression
+dep.params <- coef(dep.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+dep.items <- data.frame(dep.params$items)
+dep_item_arranged <- arrange(dep.items, desc(a) )
+# Selected items BF39 & RBF24
+
+
+
+##Emotional Volatility
+ev.params <- coef(ev.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+ev.items <- data.frame(ev.params$items)
+ev_item_arranged <- arrange(ev.items, desc(a) )
+# Selected items RBF29 & BF59
+
+##Intellectual Curiosity
+ic.params <- coef(ic.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+ic.items <- data.frame(ic.params$items)
+ic_item_arranged <- arrange(ic.items, desc(a) )
+# Selected items RBF25 & BF10
+
+##Aesthetic Sensitivity
+as.params <- coef(as.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+as.items <- data.frame(as.params$items)
+as_item_arranged <- arrange(as.items, desc(a) )
+# Selected items BF20 & RBF50
+
+##Creative Imagination
+ci.params <- coef(ci.fit, IRTpars = TRUE, simplify = TRUE, rawug = FALSE) 
+ci.items <- data.frame(ci.params$items)
+ci_item_arranged <- arrange(ci.items, desc(a) )
+# Selected items RBF30 & BF15
+
+all_item_parameters <- rbind(soc.items,ass.items,el.items,comp.items,
+                             resp.items,trust.items,org.items,
+                             prod.items, rsps.items, anx.items, dep.items,ev.items, ic.items,
+                             as.items,ci.items )
+
+
+# Item Fit
+
+#RMSEA >=.06
+soc.item.fit<- itemfit(soc.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+ass.item.fit<- itemfit(ass.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+el.item.fit<- itemfit(el.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+comp.item.fit<- itemfit(comp.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+resp.item.fit<- itemfit(resp.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+trust.item.fit<- itemfit(trust.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10, na.rm=TRUE)
+org.item.fit<- itemfit(org.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+prod.item.fit<- itemfit(prod.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+rsps.item.fit<- itemfit(rsps.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+anx.item.fit<- itemfit(anx.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+dep.item.fit<- itemfit(dep.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+ev.item.fit<- itemfit(ev.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+ic.item.fit<- itemfit(ic.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+as.item.fit<- itemfit(as.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+ci.item.fit<- itemfit(ci.fit, fit_stats = c("S_X2", "G2","Zh", "infit"),impute=10,na.rm=TRUE)
+
+all_item_fit <- rbind(soc.item.fit, ass.item.fit,el.item.fit,comp.item.fit,
+                     resp.item.fit,trust.item.fit,org.item.fit,
+                     prod.item.fit,rsps.item.fit,anx.item.fit,dep.item.fit,
+                     ev.item.fit,ic.item.fit,as.item.fit,ci.item.fit )
+
+
+all_item_irt <- cbind(all_item_parameters,all_item_fit)
+
+#Identifying Missfit items based on RMSEA Value
+soc.item_misfits <- subset(soc.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+ass.item_misfits <- subset(ass.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+el.item_misfits <- subset(el.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+comp.item_misfits <- subset(comp.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+resp.item_misfits <- subset(resp.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+trust.item_misfits <- subset(trust.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+org.item_misfits <- subset(org.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+prod.item_misfits <- subset(prod.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+rsps.item_misfits <- subset(rsps.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+anx.item_misfits <- subset(anx.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+dep.item_misfits <- subset(dep.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+ev.item_misfits <- subset(ev.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+ic.item_misfits <- subset(ic.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+as.item_misfits <- subset(as.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+ci.item_misfits <- subset(ci.item.fit, outfit>1.4| infit>1.4| RMSEA.S_X2 >= .06)
+```
+
+
+
+```{r}
+#Item discrimination
+very.low <- sum(all_item_irt$a >=.10 & all_item_irt$a<.34, na.rm=TRUE)
+low <- sum(all_item_irt$a >=.34 & all_item_irt$a<.64, na.rm=TRUE)
+moderate <- sum(all_item_irt$a >=.64 & all_item_irt$a<1.34, na.rm=TRUE)
+high <- sum(all_item_irt$a >=1.34 & all_item_irt$a<1.69, na.rm=TRUE)
+very.high <- sum(all_item_irt$a >=1.69, na.rm=TRUE)
+
+all_item_irt$Discrimination_categorization <- ifelse(all_item_irt$a >=.10 & all_item_irt$a<.34, "Very Low",
+                                                 ifelse(all_item_irt$a >=.34 & all_item_irt$a<.64,"Low",
+                                                        ifelse(all_item_irt$a >=.64 & all_item_irt$a<1.34,"Moderate",
+                                                               ifelse(all_item_irt$a >=1.34 & all_item_irt$a<1.69,"High",
+                                                                      ifelse(all_item_irt$a >=1.69, "Very High", NA)))))
+write.csv(all_item_irt, "irt.csv")
+
+```
+
+
+```{r IRT-tab1, results='asis'}
+apa_table(all_item_irt,landscape = F, caption = "IRT Description")
+```
+
+```{r irt-reliability}
+
+
+marginal.rel.soc <- marginal_rxx(soc.fit)
+marginal.rel.ass <- marginal_rxx(ass.fit)
+marginal.rel.el <- marginal_rxx(el.fit)
+marginal.rel.comp <- marginal_rxx(comp.fit)
+marginal.rel.resp <- marginal_rxx(resp.fit)
+marginal.rel.trust <- marginal_rxx(trust.fit)
+marginal.rel.org <- marginal_rxx(org.fit)
+marginal.rel.prod <- marginal_rxx(prod.fit)
+marginal.rel.rsps <- marginal_rxx(rsps.fit)
+marginal.rel.anx <- marginal_rxx(anx.fit)
+marginal.rel.dep <- marginal_rxx(dep.fit)
+marginal.rel.ev <- marginal_rxx(ev.fit)
+marginal.rel.ic <- marginal_rxx(ic.fit)
+marginal.rel.as <- marginal_rxx(as.fit)
+marginal.rel.ci <- marginal_rxx(ci.fit)
+
+
+
+empirical.rel.soc <- empirical_rxx(fscores(soc.fit,full.scores.SE = TRUE))
+empirical.rel.ass <- empirical_rxx(fscores(ass.fit,full.scores.SE = TRUE))
+empirical.rel.el <- empirical_rxx(fscores(el.fit,full.scores.SE = TRUE))
+empirical.rel.comp <- empirical_rxx(fscores(comp.fit,full.scores.SE = TRUE))
+empirical.rel.resp <- empirical_rxx(fscores(resp.fit,full.scores.SE = TRUE))
+empirical.rel.trust <- empirical_rxx(fscores(trust.fit,full.scores.SE = TRUE))
+empirical.rel.org <- empirical_rxx(fscores(org.fit,full.scores.SE = TRUE))
+empirical.rel.prod <- empirical_rxx(fscores(prod.fit,full.scores.SE = TRUE))
+empirical.rel.rsps <- empirical_rxx(fscores(rsps.fit,full.scores.SE = TRUE))
+empirical.rel.anx <- empirical_rxx(fscores(anx.fit,full.scores.SE = TRUE))
+empirical.rel.dep <- empirical_rxx(fscores(dep.fit,full.scores.SE = TRUE))
+empirical.rel.ev <- empirical_rxx(fscores(ev.fit,full.scores.SE = TRUE))
+empirical.rel.ic <- empirical_rxx(fscores(ic.fit,full.scores.SE = TRUE))
+empirical.rel.as <- empirical_rxx(fscores(as.fit,full.scores.SE = TRUE))
+empirical.rel.ci <- empirical_rxx(fscores(ci.fit,full.scores.SE = TRUE))
+
+
+```
+
+
+```{r apatheme, include=F}
+apatheme=theme_bw()+
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        #text=element_text(family = "Helvetica"),
+        axis.text.x = element_text(size = 40),
+        axis.text.y = element_text(size = 40),
+        axis.title.x = element_text(size = 40),
+        axis.title.y = element_text(size = 40),
+        plot.title = element_text(size = 40),
+        legend.text = element_text(size = 40),
+        legend.title=element_blank(),
+        axis.line.x = element_line(color='black'),
+        axis.line.y = element_line(color='black'),
+        panel.border = element_rect(color = "black",
+                                    fill = NA,
+                                    size = 1))
+```
+
+```{r IRT-plots, eval=FALSE, include=FALSE}
+#Only for inspection
+
+
+#Item Info
+soc.info_plot <- plot(soc.fit, type = "infotrace", facet =T, main = "Sociability")
+
+ass.info_plot <- plot(ass.fit, type = "infotrace", facet =T, main = "Assertiveness")
+el.info_plot <- plot(el.fit, type = "infotrace", facet =T, main = "Energy Level")
+comp.info_plot <- plot(comp.fit, type = "infotrace", facet =T, main = "Compassion")
+resp.info_plot <- plot(resp.fit, type = "infotrace", facet =T, main = "Respectfulness")
+trust.info_plot <- plot(trust.fit, type = "infotrace", facet =T, main = "Trust")
+org.info_plot<- plot(org.fit, type = "infotrace", facet =T, main = "Organization")
+prod.info_plot <- plot(prod.fit, type = "infotrace", facet =T, main = "Productiveness")
+rsps.info_plot <- plot(rsps.fit, type = "infotrace", facet =T, main = "Responsibility")
+anx.info_plot <- plot(anx.fit, type = "infotrace", facet =T, main = "Anxiety")
+dep.info_plot <- plot(dep.fit, type = "infotrace", facet =T, main = "Depression")
+ev.info_plot <- plot(ev.fit, type = "infotrace", facet =T, main = "Emotional Volatility")
+ic.info_plot <- plot(ic.fit, type = "infotrace", facet =T, main = "Intellectual Curiosity")
+as.info_plot <- plot(as.fit, type = "infotrace", facet =T, main = "Aesthetic Sensitivity")
+ci.info_plot <- plot(ci.fit, type = "infotrace", facet =T, main = "Creative Imagination")
+
+
+
+#Test Info
+soc.info_plot <- plot(soc.fit, type = "infoSE", facet =T, main = "Sociability")
+
+ass.info_plot <- plot(ass.fit, type = "infoSE", facet =T, main = "Assertiveness")
+el.info_plot <- plot(el.fit, type = "infoSE", facet =T, main = "Energy Level")
+comp.info_plot <- plot(comp.fit, type = "infoSE", facet =T, main = "Compassion")
+resp.info_plot <- plot(resp.fit, type = "infoSE", facet =T, main = "Respectfulness")
+trust.info_plot <- plot(trust.fit, type = "infoSE", facet =T, main = "Trust")
+org.info_plot<- plot(org.fit, type = "infoSE", facet =T, main = "Organization")
+prod.info_plot <- plot(prod.fit, type = "infoSE", facet =T, main = "Productiveness")
+rsps.info_plot <- plot(rsps.fit, type = "infoSE", facet =T, main = "Responsibility")
+anx.info_plot <- plot(anx.fit, type = "infoSE", facet =T, main = "Anxiety")
+dep.info_plot <- plot(dep.fit, type = "infoSE", facet =T, main = "Depression")
+ev.info_plot <- plot(ev.fit, type = "infoSE", facet =T, main = "Emotional Volatility")
+ic.info_plot <- plot(ic.fit, type = "infoSE", facet =T, main = "Intellectual Curiosity")
+as.info_plot <- plot(as.fit, type = "infoSE", facet =T, main = "Aesthetic Sensitivity")
+ci.info_plot <- plot(ci.fit, type = "infoSE", facet =T, main = "Creative Imagination")
+
+## Further modifications will be added to the code based on journal specification
+
+
+
+Extraversion_sociability_TIC <- tabledown::ggtestinfo_se(Sociability, soc.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#E64B3599")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+Extraversion_assertiveness_TIC <- tabledown::ggtestinfo_se(Assertiveness, ass.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#E64B3599")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+Extraversion_energy_TIC <- tabledown::ggtestinfo_se(Energy_Level, el.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#E64B3599")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+
+Agreeableness_compassion_TIC <- tabledown::ggtestinfo_se(Compassion, comp.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#00A08799")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+Agreeableness_respectfulness_TIC <- tabledown::ggtestinfo_se(Respectfulness, resp.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#00A08799")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+Agreeableness_trust_TIC <- tabledown::ggtestinfo_se(Trust, trust.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#00A08799")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+
+
+Cons_organization_TIC <- tabledown::ggtestinfo_se(Organization, org.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill = "#3C548899")+scale_fill_identity() +ylim(0,15)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+Cons_productiveness_TIC <- tabledown::ggtestinfo_se(Productiveness, prod.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#3C548899")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+Cons_Responsibiity_TIC <- tabledown::ggtestinfo_se(Responsibility, rsps.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#3C548899")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+
+NE_anxiety_TIC <- tabledown::ggtestinfo_se(Anxiety, anx.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#B09C8599")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+NE_depression_TIC <- tabledown::ggtestinfo_se(Depression, dep.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =   "#B09C8599")+scale_fill_identity() +ylim(0,6)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+NE_emotional_TIC <- tabledown::ggtestinfo_se(Emotional_Volatility, ev.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =   "#B09C8599")+scale_fill_identity() +ylim(0,6)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+
+
+OM_intellectual_TIC <- tabledown::ggtestinfo_se(Intellectual_Curiosity, ic.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =  "#4DBBD599")+scale_fill_identity() +ylim(0,5)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+OM_aesthetic_TIC <- tabledown::ggtestinfo_se(Aesthetic_Sensitivity, as.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =   "#4DBBD599")+scale_fill_identity() +ylim(0,8)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+OM_creative_TIC <- tabledown::ggtestinfo_se(Creative_Imagination, ci.fit)+apatheme+geom_area()+theme(legend.position = "none")+
+  aes(fill =   "#4DBBD599")+scale_fill_identity() +ylim(0,6)+xlab(expression(theta)) + 
+  ylab(expression(I(theta)))
+
+
+TIC_all <- cowplot::plot_grid(Extraversion_sociability_TIC, Extraversion_assertiveness_TIC, Extraversion_energy_TIC,
+                              Agreeableness_compassion_TIC, Agreeableness_respectfulness_TIC, Agreeableness_trust_TIC,
+                              Cons_organization_TIC, Cons_productiveness_TIC, Cons_Responsibiity_TIC,
+                              NE_anxiety_TIC, NE_depression_TIC, NE_emotional_TIC,
+                              OM_intellectual_TIC, OM_aesthetic_TIC, OM_creative_TIC,
+                              labels = "auto",ncol=3, 
+                              label_size = 40,
+                              align = "v",
+                  label_fontface = "plain")
+
+ggsave("Figures/TIC.png",TIC_all , units = "mm", width = 174, height = 174, dpi = 600, bg = "white")
+
+```
+
+```{r}
+#Person Fit ####
+#Sociability
+sociability.personfit <- personfit(soc.fit) 
+sociability.personfit_model_misfits <- subset(sociability.personfit, Zh < -2)
+rownames(sociability.personfit_model_misfits)
+nrow(sociability.personfit_model_misfits)
+sociability.per.fit <- ggplot(sociability.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+
+#Assertivess
+assertiveness.personfit <- personfit(soc.fit) 
+assertiveness.personfit_model_misfits <- subset(assertiveness.personfit, Zh < -2)
+rownames(assertiveness.personfit_model_misfits)
+nrow(assertiveness.personfit_model_misfits)
+assertiveness.per.fit <- ggplot(assertiveness.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+
+#Energy
+energy.personfit <- personfit(soc.fit) 
+energy.personfit_model_misfits <- subset(energy.personfit, Zh < -2)
+rownames(energy.personfit_model_misfits)
+nrow(energy.personfit_model_misfits)
+energy.per.fit <- ggplot(energy.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#compassion
+compassion.personfit <- personfit(soc.fit) 
+compassion.personfit_model_misfits <- subset(compassion.personfit, Zh < -2)
+rownames(compassion.personfit_model_misfits)
+nrow(compassion.personfit_model_misfits)
+compassion.per.fit <- ggplot(compassion.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#Respectfulness
+respect.personfit <- personfit(soc.fit) 
+respect.personfit_model_misfits <- subset(respect.personfit, Zh < -2)
+rownames(respect.personfit_model_misfits)
+nrow(respect.personfit_model_misfits)
+respect.per.fit <- ggplot(respect.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#Trust
+trust.personfit <- personfit(soc.fit) 
+trust.personfit_model_misfits <- subset(trust.personfit, Zh < -2)
+rownames(trust.personfit_model_misfits)
+nrow(trust.personfit_model_misfits)
+trust.per.fit <- ggplot(trust.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#Organization
+organization.personfit <- personfit(soc.fit) 
+organization.personfit_model_misfits <- subset(organization.personfit, Zh < -2)
+rownames(organization.personfit_model_misfits)
+nrow(organization.personfit_model_misfits)
+organization.per.fit <- ggplot(organization.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#Productive
+productive.personfit <- personfit(soc.fit) 
+productive.personfit_model_misfits <- subset(productive.personfit, Zh < -2)
+rownames(productive.personfit_model_misfits)
+nrow(productive.personfit_model_misfits)
+productive.per.fit <- ggplot(productive.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#Responsibility
+responsibility.personfit <- personfit(soc.fit) 
+responsibility.personfit_model_misfits <- subset(responsibility.personfit, Zh < -2)
+rownames(responsibility.personfit_model_misfits)
+nrow(responsibility.personfit_model_misfits)
+responsibility.per.fit <- ggplot(responsibility.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+
+#Anxiety
+anxiety.personfit <- personfit(soc.fit) 
+anxiety.personfit_model_misfits <- subset(anxiety.personfit, Zh < -2)
+rownames(anxiety.personfit_model_misfits)
+nrow(anxiety.personfit_model_misfits)
+anxiety.per.fit <- ggplot(anxiety.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#Depression
+depression.personfit <- personfit(soc.fit) 
+depression.personfit_model_misfits <- subset(depression.personfit, Zh < -2)
+rownames(depression.personfit_model_misfits)
+nrow(depression.personfit_model_misfits)
+depression.per.fit <- ggplot(depression.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#EV
+emotion.personfit <- personfit(soc.fit) 
+emotion.personfit_model_misfits <- subset(emotion.personfit, Zh < -2)
+rownames(emotion.personfit_model_misfits)
+nrow(emotion.personfit_model_misfits)
+emotion.per.fit <- ggplot(emotion.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+#Intellectual
+Intellect.personfit <- personfit(soc.fit) 
+Intellect.personfit_model_misfits <- subset(Intellect.personfit, Zh < -2)
+rownames(Intellect.personfit_model_misfits)
+nrow(Intellect.personfit_model_misfits)
+Intellect.per.fit <- ggplot(Intellect.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+# Aesthetic
+aesthetic.personfit <- personfit(soc.fit) 
+aesthetic.personfit_model_misfits <- subset(aesthetic.personfit, Zh < -2)
+rownames(aesthetic.personfit_model_misfits)
+nrow(aesthetic.personfit_model_misfits)
+aesthetic.per.fit <- ggplot(aesthetic.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+
+# Creative
+creative.personfit <- personfit(soc.fit) 
+creative.personfit_model_misfits <- subset(creative.personfit, Zh < -2)
+rownames(creative.personfit_model_misfits)
+nrow(creative.personfit_model_misfits)
+creative.per.fit <- ggplot(creative.personfit, aes(x=Zh)) + geom_histogram(binwidth=.6,col=I("black"), fill="#E64B3599")+ ylim(0,200) + xlim(-4,2)+geom_vline(xintercept = -2)+
+  labs( y="Number of Participants", x = "Zh Statistics:Observe")+apatheme
+```
+
+
+## Convergent and Discriminant Validity
+
+
+```{r validity, include=F}
+
+
+Total_bfi <- bigfive %>% 
+  rowwise() %>% 
+  mutate(bfi_extraversion_total=sum(BFI01, BFI06, RBFI11, RBFI16, BFI21, RBFI26, RBFI31, RBFI36, BFI41, BFI46, RBFI51, BFI56),
+         bfi_aggreableness_total=sum(BFI02, BFI07, RBFI12, RBFI17, RBFI22, BFI27, BFI32, RBFI37, RBFI42, RBFI47, BFI52, BFI57),
+         bfi_conscientiousness_total=sum(RBFI03, RBFI08, BFI13, BFI18, RBFI23, RBFI28, BFI33, BFI38, BFI43, RBFI48, BFI53, RBFI58),
+         bfi_ne_total=sum(RBFI04, RBFI09, BFI14, BFI19, RBFI24, RBFI29, BFI34, BFI39, RBFI44, RBFI49, BFI54, BFI59),
+         bfi_open_total=sum(RBFI05, BFI10, BFI15, BFI20, RBFI25, RBFI30, BFI35, BFI40, RBFI45, RBFI50, RBFI55, BFI60))
+
+
+Total_neoffi <- neo_ffi %>% 
+  rowwise() %>% 
+  mutate(neoffi_extraversion_total=sum(NEOFFI_02, NEOFFI_17, RNEOFFI_12, NEOFFI_17, NEOFFI_22, RNEOFFI_27, NEOFFI_32, NEOFFI_37, RNEOFFI_42, NEOFFI_47, NEOFFI_52, RNEOFFI_57),
+         neoffi_aggreableness_total=sum(NEOFFI_04, RNEOFFI_09, RNEOFFI_14, NEOFFI_19, RNEOFFI_24, RNEOFFI_29, NEOFFI_34, RNEOFFI_39, RNEOFFI_44, NEOFFI_49, RNEOFFI_54, RNEOFFI_59),
+         neoffi_conscientiousness_total=sum(NEOFFI_05, NEOFFI_10, RNEOFFI_15, NEOFFI_20, NEOFFI_25, RNEOFFI_30, NEOFFI_35, NEOFFI_40, RNEOFFI_45, NEOFFI_50, RNEOFFI_55, NEOFFI_60),
+         neoffi_ne_total=sum(RNEOFFI_01, NEOFFI_06, NEOFFI_11, RNEOFFI_16, NEOFFI_21, NEOFFI_26, RNEOFFI_31, NEOFFI_36, NEOFFI_41, RNEOFFI_46, NEOFFI_51, NEOFFI_56),
+         neoffi_open_total=sum(RNEOFFI_03, RNEOFFI_08, NEOFFI_13, RNEOFFI_18, RNEOFFI_23, NEOFFI_28, RNEOFFI_33, RNEOFFI_38, NEOFFI_43, RNEOFFI_48, NEOFFI_53, NEOFFI_58))
+
+
+
+
+
+
+correlation_data <- as.data.frame(cbind(data_full$Age,data_full$Gender,Total_bfi$bfi_aggreableness_total, Total_bfi$bfi_conscientiousness_total, Total_bfi$bfi_extraversion_total, Total_bfi$bfi_ne_total, Total_bfi$bfi_open_total, Total_neoffi$neoffi_aggreableness_total, Total_neoffi$neoffi_conscientiousness_total, Total_neoffi$neoffi_extraversion_total, Total_neoffi$neoffi_ne_total, Total_neoffi$neoffi_open_total ))
+
+colnames(correlation_data) <- c("Age", "Gender", "BFI_Agreeableness", "BFI_Conscientiousness",
+                                "BFI_Extraversion", "BFI_NE", "BFI_Open",
+                                "NEOFFI_Agreeableness", "NEOFFI_Conscientiousness",
+                                "NEOFFI_Extraversion", "NEOFFI_NE", "NEOFFI_Open")
+
+## Recoding correlation_data$Gender
+correlation_data$Gender[correlation_data$Gender == "Female"] <- "1"
+correlation_data$Gender[correlation_data$Gender == "Male"] <- "2"
+correlation_data$Gender <- as.numeric(correlation_data$Gender)
+
+correlation_data$Age <- as.numeric(correlation_data$Age)
+correlation_data$BFI_Agreeableness <- as.numeric(correlation_data$BFI_Agreeableness)
+correlation_data$BFI_Conscientiousness <- as.numeric(correlation_data$BFI_Conscientiousness)
+correlation_data$BFI_Extraversion <- as.numeric(correlation_data$BFI_Extraversion)
+correlation_data$BFI_NE <- as.numeric(correlation_data$BFI_NE)
+correlation_data$BFI_Open <- as.numeric(correlation_data$BFI_Open)
+
+correlation_data$NEOFFI_Agreeableness <- as.numeric(correlation_data$NEOFFI_Agreeableness)
+correlation_data$NEOFFI_Conscientiousness <- as.numeric(correlation_data$NEOFFI_Conscientiousness)
+correlation_data$NEOFFI_Extraversion <- as.numeric(correlation_data$NEOFFI_Extraversion)
+correlation_data$NEOFFI_NE <- as.numeric(correlation_data$NEOFFI_NE)
+correlation_data$NEOFFI_Open <- as.numeric(correlation_data$NEOFFI_Open)
+
+
+# Agree_correlation_data <- correlation_data %>% 
+#   dplyr::select(Age,Gender,BFI_Agreeableness, NEOFFI_Agreeableness) 
+# 
+# Conscientiousness_correlation_data <- correlation_data %>% 
+#   dplyr::select(Age,Gender,BFI_Conscientiousness, NEOFFI_Conscientiousness) 
+# 
+# Extraversion_correlation_data <- correlation_data %>% 
+#   dplyr::select(Age,Gender,BFI_Extraversion, NEOFFI_Extraversion) 
+# 
+# NE_correlation_data <- correlation_data %>% 
+#   dplyr::select(Age,Gender,BFI_NE, NEOFFI_NE) 
+# 
+# Open_correlation_data <- correlation_data %>% 
+#   dplyr::select(Age,Gender,BFI_Open, NEOFFI_Open) 
+# 
+
+# 
+# Agree_correlation_cof <- partial.cor(Agree_correlation_data, tests=TRUE)
+# Conscientiousness_correlation_cof <- partial.cor(Conscientiousness_correlation_data, tests=TRUE)
+# Extraversione_correlation_cof <- partial.cor(Extraversion_correlation_data, tests=TRUE)
+# NE_correlation_cof <- partial.cor(NE_correlation_data, tests=TRUE)
+# Open_correlation_cof <- partial.cor(Open_correlation_data, tests=TRUE)
+
+
+## Final analysis
+library(ppcor)
+correlation_data_no_missing <- na.omit(correlation_data)
+vars_to_correlate <- names(correlation_data_no_missing)[3:12] |> 
+  combn(2) |> 
+  t() |> 
+  as.data.frame()
+
+correlation_controlled_gender <- map2_df(vars_to_correlate[[1]], vars_to_correlate[[2]], 
+        ~ pcor.test(correlation_data_no_missing[[.x]], correlation_data_no_missing[[.y]], correlation_data_no_missing[["Gender"]])) |> 
+  cbind(vars_to_correlate)
+
+
+correlation_controlled_age <- map2_df(vars_to_correlate[[1]], vars_to_correlate[[2]], 
+        ~ pcor.test(correlation_data_no_missing[[.x]], correlation_data_no_missing[[.y]], correlation_data_no_missing[["Age"]])) |> 
+  cbind(vars_to_correlate)
+
+```
+
+
+# Discussion
+
+
+\newpage
+
+# References
+
+::: {#refs custom-style="Bibliography"}
+:::
